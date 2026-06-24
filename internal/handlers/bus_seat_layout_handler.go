@@ -1,0 +1,203 @@
+package handlers
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
+	"github.com/smarttransit/sms-auth-backend/internal/middleware"
+	"github.com/smarttransit/sms-auth-backend/internal/models"
+	"github.com/smarttransit/sms-auth-backend/internal/services"
+)
+
+// BusSeatLayoutHandler handles HTTP requests for bus seat layout templates
+type BusSeatLayoutHandler struct {
+	service *services.BusSeatLayoutService
+	logger  *logrus.Logger
+}
+
+// NewBusSeatLayoutHandler creates a new bus seat layout handler
+func NewBusSeatLayoutHandler(service *services.BusSeatLayoutService, logger *logrus.Logger) *BusSeatLayoutHandler {
+	return &BusSeatLayoutHandler{
+		service: service,
+		logger:  logger,
+	}
+}
+
+// CreateTemplate creates a new bus seat layout template
+// @Summary Create a new seat layout template
+// @Description Create a new bus seat layout template with seat configuration
+// @Tags Seat Layouts
+// @Accept json
+// @Produce json
+// @Param request body models.CreateBusSeatLayoutTemplateRequest true "Seat layout template details"
+// @Success 201 {object} models.BusSeatLayoutTemplateResponse
+// @Failure 400 {object} map[string]interface{} "Invalid request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/seat-layouts [post]
+func (h *BusSeatLayoutHandler) CreateTemplate(c *gin.Context) {
+	var req models.CreateBusSeatLayoutTemplateRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("Invalid request body", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	// Get user context from middleware
+	userCtx, exists := middleware.GetUserContext(c)
+	if !exists {
+		h.logger.Error("User context not found - auth middleware may not be applied")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "User context not found"})
+		return
+	}
+
+	adminID := userCtx.UserID
+	h.logger.WithFields(logrus.Fields{
+		"admin_id": adminID,
+		"phone":    userCtx.Phone,
+		"roles":    userCtx.Roles,
+	}).Info("Creating bus seat layout template")
+
+	// Create template
+	template, err := h.service.CreateTemplate(c.Request.Context(), &req, adminID)
+	if err != nil {
+		h.logger.Error("Failed to create template", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create template", "details": err.Error()})
+		return
+	}
+
+	h.logger.Info("Bus seat layout template created successfully", "template_id", template.ID, "admin_id", adminID)
+	c.JSON(http.StatusCreated, template)
+}
+
+// GetTemplate retrieves a specific template by ID
+// @Summary Get a seat layout template
+// @Description Get details of a specific seat layout template by ID
+// @Tags Seat Layouts
+// @Produce json
+// @Param id path string true "Template ID"
+// @Success 200 {object} models.BusSeatLayoutTemplateResponse
+// @Failure 400 {object} map[string]interface{} "Invalid template ID"
+// @Failure 404 {object} map[string]interface{} "Template not found"
+// @Security BearerAuth
+// @Router /api/v1/admin/seat-layouts/{id} [get]
+func (h *BusSeatLayoutHandler) GetTemplate(c *gin.Context) {
+	templateIDStr := c.Param("id")
+	templateID, err := uuid.Parse(templateIDStr)
+	if err != nil {
+		h.logger.Error("Invalid template ID", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid template ID"})
+		return
+	}
+
+	template, err := h.service.GetTemplateByID(c.Request.Context(), templateID)
+	if err != nil {
+		h.logger.Error("Failed to get template", "template_id", templateID, "error", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Template not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, template)
+}
+
+// ListTemplates retrieves all templates
+// @Summary List all seat layout templates
+// @Description Get a list of all seat layout templates, optionally filtered by active status
+// @Tags Seat Layouts
+// @Produce json
+// @Param active_only query boolean false "Filter for active templates only"
+// @Success 200 {object} map[string]interface{} "List of templates with count"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/seat-layouts [get]
+func (h *BusSeatLayoutHandler) ListTemplates(c *gin.Context) {
+	activeOnlyStr := c.Query("active_only")
+	activeOnly := activeOnlyStr == "true"
+
+	templates, err := h.service.ListTemplates(c.Request.Context(), activeOnly)
+	if err != nil {
+		h.logger.Error("Failed to list templates", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list templates"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"templates": templates,
+		"count":     len(templates),
+	})
+}
+
+// UpdateTemplate updates a template's basic information
+// @Summary Update a seat layout template
+// @Description Update basic information of a seat layout template
+// @Tags Seat Layouts
+// @Accept json
+// @Produce json
+// @Param id path string true "Template ID"
+// @Param request body models.UpdateBusSeatLayoutTemplateRequest true "Update details"
+// @Success 200 {object} models.BusSeatLayoutTemplateResponse
+// @Failure 400 {object} map[string]interface{} "Invalid request"
+// @Failure 404 {object} map[string]interface{} "Template not found"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/seat-layouts/{id} [put]
+func (h *BusSeatLayoutHandler) UpdateTemplate(c *gin.Context) {
+	templateIDStr := c.Param("id")
+	templateID, err := uuid.Parse(templateIDStr)
+	if err != nil {
+		h.logger.Error("Invalid template ID", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid template ID"})
+		return
+	}
+
+	var req models.UpdateBusSeatLayoutTemplateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("Invalid request body", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	if err := h.service.UpdateTemplate(c.Request.Context(), templateID, &req); err != nil {
+		h.logger.Error("Failed to update template", "template_id", templateID, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update template"})
+		return
+	}
+
+	h.logger.Info("Template updated successfully", "template_id", templateID)
+	c.JSON(http.StatusOK, gin.H{"message": "Template updated successfully"})
+}
+
+// DeleteTemplate deletes a template
+// @Summary Delete a seat layout template
+// @Description Soft delete a seat layout template (marks as inactive)
+// @Tags Seat Layouts
+// @Produce json
+// @Param id path string true "Template ID"
+// @Success 200 {object} map[string]interface{} "Deletion success message"
+// @Failure 400 {object} map[string]interface{} "Invalid template ID"
+// @Failure 404 {object} map[string]interface{} "Template not found"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/admin/seat-layouts/{id} [delete]
+func (h *BusSeatLayoutHandler) DeleteTemplate(c *gin.Context) {
+	templateIDStr := c.Param("id")
+	templateID, err := uuid.Parse(templateIDStr)
+	if err != nil {
+		h.logger.Error("Invalid template ID", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid template ID"})
+		return
+	}
+
+	if err := h.service.DeleteTemplate(c.Request.Context(), templateID); err != nil {
+		h.logger.Error("Failed to delete template", "template_id", templateID, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete template"})
+		return
+	}
+
+	h.logger.Info("Template deleted successfully", "template_id", templateID)
+	c.JSON(http.StatusOK, gin.H{"message": "Template deleted successfully"})
+}

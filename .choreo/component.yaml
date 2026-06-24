@@ -1,0 +1,11 @@
+schemaVersion: "1.2"
+endpoints:
+    - name: sms-auth-api-858
+      displayName: sms-auth-api
+      service:
+        basePath: /
+        port: 8080
+      type: REST
+      networkVisibilities:
+        - Public
+      schemaFilePath: swagger.yaml

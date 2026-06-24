@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SmartTransit Backend Version Policy Handbook</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">SmartTransit Backend Version Policy Handbook</h1>
+</header>
+<h1 id="smarttransit-backend-version-policy-handbook">SmartTransit Backend Version Policy Handbook</h1>
+<p>Last updated: 2026-03-05 Audience: New and existing backend developers</p>
+<hr />
+<h2 id="purpose">Purpose</h2>
+<p>This handbook defines the approved versions for backend development and explains <strong>why each version choice matters</strong>. The goal is simple:</p>
+<ul>
+<li>predictable builds,</li>
+<li>fewer environment-related bugs,</li>
+<li>safer dependency upgrades,</li>
+<li>faster onboarding for new team members.</li>
+</ul>
+<p>If your local setup differs from this handbook, align to this document first.</p>
+<hr />
+<h2 id="mandatory-version-baseline">1) Mandatory Version Baseline</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Approved Version</th>
+<th>Why this version is selected</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Go language</td>
+<td><strong>1.24.5</strong></td>
+<td>Matches <code>go.mod</code>, CI expectations, and current dependency compatibility. Prevents module/toolchain mismatch issues.</td>
+</tr>
+<tr class="even">
+<td>Docker build image</td>
+<td><strong>golang:1.24-alpine</strong></td>
+<td>Keeps container build environment aligned with Go target version while staying lightweight.</td>
+</tr>
+<tr class="odd">
+<td>Docker runtime image</td>
+<td><strong>alpine:latest</strong></td>
+<td>Small runtime image footprint and fast startup for backend service containers.</td>
+</tr>
+<tr class="even">
+<td>OpenAPI spec</td>
+<td><strong>3.0.3</strong></td>
+<td>Stable and widely supported by tooling used in testing/documentation workflows.</td>
+</tr>
+<tr class="odd">
+<td>Service port</td>
+<td><strong>8080</strong></td>
+<td>Standardized local and container port across scripts and deployment config.</td>
+</tr>
+<tr class="even">
+<td>Choreo component schema</td>
+<td><strong>1.2</strong></td>
+<td>Matches current deployment descriptor format used by this project.</td>
+</tr>
+<tr class="odd">
+<td>Postman collection schema</td>
+<td><strong>v2.1.0</strong></td>
+<td>Compatible with current Postman import/export and collaboration workflows.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="core-backend-libraries-pinned">2) Core Backend Libraries (Pinned)</h2>
+<p>These are pinned in <code>go.mod</code> and should not be changed casually.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Library</th>
+<th>Version</th>
+<th>Why we use this version</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>github.com/gin-gonic/gin</code></td>
+<td><strong>v1.11.0</strong></td>
+<td>Main HTTP framework. Current version provides mature middleware ecosystem and stable API behavior.</td>
+</tr>
+<tr class="even">
+<td><code>github.com/gin-contrib/cors</code></td>
+<td><strong>v1.7.6</strong></td>
+<td>CORS handling that stays compatible with current Gin version.</td>
+</tr>
+<tr class="odd">
+<td><code>github.com/golang-jwt/jwt/v5</code></td>
+<td><strong>v5.3.0</strong></td>
+<td>Current JWT major version with modern API and security-focused maintenance.</td>
+</tr>
+<tr class="even">
+<td><code>golang.org/x/crypto</code></td>
+<td><strong>v0.42.0</strong></td>
+<td>Security primitives (including bcrypt) aligned with current Go ecosystem expectations.</td>
+</tr>
+<tr class="odd">
+<td><code>github.com/jackc/pgx/v5</code></td>
+<td><strong>v5.7.6</strong></td>
+<td>High-performance PostgreSQL driver/pool support used by service data layer.</td>
+</tr>
+<tr class="even">
+<td><code>github.com/lib/pq</code></td>
+<td><strong>v1.10.9</strong></td>
+<td>Compatibility path for code or integrations expecting <code>database/sql</code> + pq behavior.</td>
+</tr>
+<tr class="odd">
+<td><code>github.com/jmoiron/sqlx</code></td>
+<td><strong>v1.4.0</strong></td>
+<td>Cleaner SQL mapping and query ergonomics over raw <code>database/sql</code>.</td>
+</tr>
+<tr class="even">
+<td><code>github.com/joho/godotenv</code></td>
+<td><strong>v1.5.1</strong></td>
+<td>Standard <code>.env</code> loading behavior used across local environments.</td>
+</tr>
+<tr class="odd">
+<td><code>github.com/sirupsen/logrus</code></td>
+<td><strong>v1.9.3</strong></td>
+<td>Stable structured logging with familiar team usage patterns.</td>
+</tr>
+<tr class="even">
+<td><code>github.com/google/uuid</code></td>
+<td><strong>v1.6.0</strong></td>
+<td>Standard UUID generation/parsing for IDs and references.</td>
+</tr>
+<tr class="odd">
+<td><code>github.com/mssola/user_agent</code></td>
+<td><strong>v0.6.0</strong></td>
+<td>User agent parsing where client metadata is needed.</td>
+</tr>
+<tr class="even">
+<td><code>github.com/stretchr/testify</code></td>
+<td><strong>v1.11.1</strong></td>
+<td>Testing assertions and helpers with broad community support.</td>
+</tr>
+<tr class="odd">
+<td><code>github.com/DATA-DOG/go-sqlmock</code></td>
+<td><strong>v1.5.2</strong></td>
+<td>Reliable DB mocking for unit tests without live PostgreSQL.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Policy: Direct and indirect Go module versions are controlled by <code>go.mod</code> and <code>go.sum</code>. Commit both files together for any dependency change.</p>
+</blockquote>
+<hr />
+<h2 id="external-services-and-interface-versions">3) External Services and Interface Versions</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Service</th>
+<th>Version / Interface</th>
+<th>Why this choice</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Dialog eSMS</td>
+<td><code>https://e-sms.dialog.lk/api/v2</code> (default)</td>
+<td>Production OTP delivery path currently configured in backend defaults.</td>
+</tr>
+<tr class="even">
+<td>OneSignal</td>
+<td><code>https://onesignal.com/api/v1/notifications</code></td>
+<td>Stable REST endpoint used for push notification integration.</td>
+</tr>
+<tr class="odd">
+<td>PAYable</td>
+<td>Environment flag: <code>sandbox</code> / <code>production</code></td>
+<td>Allows strict separation of test vs real payment flows.</td>
+</tr>
+<tr class="even">
+<td>PostgreSQL hosting (e.g., Supabase)</td>
+<td>Connection string via <code>DATABASE_URL</code></td>
+<td>Keeps host/provider decoupled from code while enforcing SSL-ready deployment patterns.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="known-out-of-scope-versions-backend-repo">4) Known Out-of-Scope Versions (Backend Repo)</h2>
+<p>The following are <strong>not pinned in this backend repository</strong> and must be controlled in the frontend/mobile repository:</p>
+<ul>
+<li>Flutter SDK version</li>
+<li>Android Gradle Plugin version</li>
+<li>Gradle wrapper version</li>
+<li><code>compileSdkVersion</code>, <code>targetSdkVersion</code>, <code>minSdkVersion</code></li>
+<li>Android Build Tools version</li>
+<li>Kotlin version</li>
+<li>Android build JDK version</li>
+<li>iOS deployment target / Xcode version</li>
+</ul>
+<p>Why this is out-of-scope: these versions belong to app build pipelines, not backend build/runtime.</p>
+<hr />
+<h2 id="rules-for-new-and-existing-developers">5) Rules for New and Existing Developers</h2>
+<ol type="1">
+<li>Use <strong>Go 1.24.5</strong> locally.</li>
+<li>Do not manually edit dependency versions outside normal <code>go mod</code> workflow.</li>
+<li>Run checks before pushing: <code>make check</code>.</li>
+<li>Keep Docker and Go versions aligned (Go toolchain in <code>go.mod</code> and <code>Dockerfile</code> must match).</li>
+<li>Update this handbook in the same PR whenever version policy changes.</li>
+</ol>
+<hr />
+<h2 id="safe-upgrade-process">6) Safe Upgrade Process</h2>
+<p>When upgrading any core version:</p>
+<ol type="1">
+<li>Create a small PR focused only on the version bump.</li>
+<li>Run <code>go mod tidy</code>, tests, and basic endpoint smoke tests.</li>
+<li>Check authentication, database, and payment-related flows.</li>
+<li>Update this handbook and <code>TECH_STACK_AND_DEPENDENCIES.md</code> together.</li>
+<li>Merge only after at least one teammate validates locally.</li>
+</ol>
+<hr />
+<h2 id="quick-onboarding-checklist">7) Quick Onboarding Checklist</h2>
+<ul>
+<li>Install Go <strong>1.24.5</strong>.</li>
+<li>Pull latest code.</li>
+<li>Run <code>make install-deps</code>.</li>
+<li>Configure <code>.env</code> from <code>.env.example</code>.</li>
+<li>Start backend: <code>make run</code>.</li>
+<li>Verify health endpoint: <code>http://localhost:8080/health</code>.</li>
+</ul>
+<p>If your environment does not match expected behavior, first re-check your versions against this handbook.</p>
+<hr />
+<h2 id="appendix-a-source-of-truth-files">Appendix A — Source of Truth Files</h2>
+<ul>
+<li><code>go.mod</code></li>
+<li><code>go.sum</code></li>
+<li><code>Dockerfile</code></li>
+<li><code>Makefile</code></li>
+<li><code>swagger.yaml</code></li>
+<li><code>.choreo/component.yaml</code></li>
+<li><code>TECH_STACK_AND_DEPENDENCIES.md</code></li>
+</ul>
+</body>
+</html>

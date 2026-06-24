@@ -1,0 +1,417 @@
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs36 SmartTransit Backend Version Policy Handbook\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Last updated: 2026-03-05 Audience: New and existing backend developers\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 Purpose\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 This handbook defines the approved versions for backend development and explains {\b why each version choice matters}. The goal is simple:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab predictable builds,\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab fewer environment-related bugs,\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab safer dependency upgrades,\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab faster onboarding for new team members.\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 If your local setup differs from this handbook, align to this document first.\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 1) Mandatory Version Baseline\par}
+{
+\trowd \trgaph120
+\clbrdrb\brdrs\cellx2880\clbrdrb\brdrs\cellx5760\clbrdrb\brdrs\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Area\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Approved Version\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Why this version is selected\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Go language\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b 1.24.5}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Matches {\f1 go.mod}, CI expectations, and current dependency compatibility. Prevents module/toolchain mismatch issues.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Docker build image\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b golang:1.24-alpine}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Keeps container build environment aligned with Go target version while staying lightweight.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Docker runtime image\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b alpine:latest}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Small runtime image footprint and fast startup for backend service containers.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 OpenAPI spec\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b 3.0.3}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Stable and widely supported by tooling used in testing/documentation workflows.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Service port\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b 8080}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Standardized local and container port across scripts and deployment config.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Choreo component schema\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b 1.2}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Matches current deployment descriptor format used by this project.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Postman collection schema\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v2.1.0}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Compatible with current Postman import/export and collaboration workflows.\par}
+\cell}
+}
+\intbl\row}
+{\pard \ql \f0 \sa180 \li0 \fi0 \par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 2) Core Backend Libraries (Pinned)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 These are pinned in {\f1 go.mod} and should not be changed casually.\par}
+{
+\trowd \trgaph120
+\clbrdrb\brdrs\cellx2880\clbrdrb\brdrs\cellx5760\clbrdrb\brdrs\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Library\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Version\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Why we use this version\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/gin-gonic/gin}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v1.11.0}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Main HTTP framework. Current version provides mature middleware ecosystem and stable API behavior.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/gin-contrib/cors}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v1.7.6}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 CORS handling that stays compatible with current Gin version.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/golang-jwt/jwt/v5}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v5.3.0}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Current JWT major version with modern API and security-focused maintenance.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 golang.org/x/crypto}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v0.42.0}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Security primitives (including bcrypt) aligned with current Go ecosystem expectations.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/jackc/pgx/v5}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v5.7.6}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 High-performance PostgreSQL driver/pool support used by service data layer.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/lib/pq}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v1.10.9}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Compatibility path for code or integrations expecting {\f1 database/sql} + pq behavior.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/jmoiron/sqlx}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v1.4.0}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Cleaner SQL mapping and query ergonomics over raw {\f1 database/sql}.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/joho/godotenv}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v1.5.1}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Standard {\f1 .env} loading behavior used across local environments.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/sirupsen/logrus}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v1.9.3}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Stable structured logging with familiar team usage patterns.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/google/uuid}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v1.6.0}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Standard UUID generation/parsing for IDs and references.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/mssola/user_agent}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v0.6.0}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 User agent parsing where client metadata is needed.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/stretchr/testify}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v1.11.1}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Testing assertions and helpers with broad community support.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 github.com/DATA-DOG/go-sqlmock}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\b v1.5.2}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Reliable DB mocking for unit tests without live PostgreSQL.\par}
+\cell}
+}
+\intbl\row}
+{\pard \ql \f0 \sa180 \li0 \fi0 \par}
+{\pard \ql \f0 \sa180 \li720 \fi0 Policy: Direct and indirect Go module versions are controlled by {\f1 go.mod} and {\f1 go.sum}. Commit both files together for any dependency change.\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 3) External Services and Interface Versions\par}
+{
+\trowd \trgaph120
+\clbrdrb\brdrs\cellx2880\clbrdrb\brdrs\cellx5760\clbrdrb\brdrs\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Service\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Version / Interface\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Why this choice\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Dialog eSMS\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 https://e-sms.dialog.lk/api/v2} (default)\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Production OTP delivery path currently configured in backend defaults.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 OneSignal\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 {\f1 https://onesignal.com/api/v1/notifications}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Stable REST endpoint used for push notification integration.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 PAYable\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Environment flag: {\f1 sandbox} / {\f1 production}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Allows strict separation of test vs real payment flows.\par}
+\cell}
+}
+\intbl\row}
+{
+\trowd \trgaph120
+\cellx2880\cellx5760\cellx8640
+\trkeep\intbl
+{
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 PostgreSQL hosting (e.g., Supabase)\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Connection string via {\f1 DATABASE_URL}\par}
+\cell}
+{{\pard\intbl \ql \f0 \sa0 \li0 \fi0 Keeps host/provider decoupled from code while enforcing SSL-ready deployment patterns.\par}
+\cell}
+}
+\intbl\row}
+{\pard \ql \f0 \sa180 \li0 \fi0 \par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 4) Known Out-of-Scope Versions (Backend Repo)\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 The following are {\b not pinned in this backend repository} and must be controlled in the frontend/mobile repository:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Flutter SDK version\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Android Gradle Plugin version\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Gradle wrapper version\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\f1 compileSdkVersion}, {\f1 targetSdkVersion}, {\f1 minSdkVersion}\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Android Build Tools version\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Kotlin version\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Android build JDK version\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab iOS deployment target / Xcode version\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Why this is out-of-scope: these versions belong to app build pipelines, not backend build/runtime.\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 5) Rules for New and Existing Developers\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Use {\b Go 1.24.5} locally.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Do not manually edit dependency versions outside normal {\f1 go mod} workflow.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab Run checks before pushing: {\f1 make check}.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab Keep Docker and Go versions aligned (Go toolchain in {\f1 go.mod} and {\f1 Dockerfile} must match).\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 5.\tx360\tab Update this handbook in the same PR whenever version policy changes.\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 6) Safe Upgrade Process\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 When upgrading any core version:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab Create a small PR focused only on the version bump.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Run {\f1 go mod tidy}, tests, and basic endpoint smoke tests.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab Check authentication, database, and payment-related flows.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab Update this handbook and {\f1 TECH_STACK_AND_DEPENDENCIES.md} together.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 5.\tx360\tab Merge only after at least one teammate validates locally.\sa180\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 7) Quick Onboarding Checklist\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Install Go {\b 1.24.5}.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Pull latest code.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Run {\f1 make install-deps}.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Configure {\f1 .env} from {\f1 .env.example}.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Start backend: {\f1 make run}.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab Verify health endpoint: {\f1 http://localhost:8080/health}.\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 If your environment does not match expected behavior, first re-check your versions against this handbook.\par}
+{\pard \qc \f0 \sa180 \li0 \fi0 \emdash\emdash\emdash\emdash\emdash\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \b \fs32 Appendix A \u8212- Source of Truth Files\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\f1 go.mod}\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\f1 go.sum}\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\f1 Dockerfile}\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\f1 Makefile}\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\f1 swagger.yaml}\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\f1 .choreo/component.yaml}\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\f1 TECH_STACK_AND_DEPENDENCIES.md}\sa180\par}
