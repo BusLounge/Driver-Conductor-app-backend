@@ -272,7 +272,7 @@ func (d *DialogGateway) SendOTP(phone, otpCode, appType string) (int64, error) {
 	if appHash != "" {
 		// Format for Android SMS auto-read:
 		// OTP code followed by message and app hash on a new line
-		message = fmt.Sprintf("Your SmartTransit OTP is: %s\n\nPlease use the above OTP to complete your action.\n\nRegards,\nSmartTransit\n%s", otpCode, appHash)
+		message = fmt.Sprintf("<#> Your SmartTransit OTP is: %s\n\nPlease use the above OTP to complete your action.\n\nRegards,\nSmartTransit\n%s", otpCode, appHash)
 	} else {
 		// Fallback message without app hash
 		message = fmt.Sprintf("Your OTP is %s. Valid for 5 minutes. Do not share this code with anyone.", otpCode)
