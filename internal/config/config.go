@@ -161,7 +161,7 @@ func Load() (*Config, error) {
 			Username:         getEnv("DIALOG_SMS_USERNAME", ""),
 			Password:         getEnv("DIALOG_SMS_PASSWORD", ""),
 			Mask:             getEnv("DIALOG_SMS_MASK", ""),
-			DriverAppHash:    getEnv("DRIVER_APP_HASH", ""),    // SMS auto-read for driver app
+			DriverAppHash:    getEnv("DRIVER_APP_HASH", "cSmwCHTR6pk"),    // SMS auto-read for driver app
 			PassengerAppHash: getEnv("PASSENGER_APP_HASH", ""), // SMS auto-read for passenger app
 			// Deprecated fields kept for backward compatibility
 			APIKey:   getEnv("DIALOG_SMS_API_KEY", ""),
