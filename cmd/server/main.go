@@ -253,6 +253,11 @@ func main() {
 	masterRouteHandler := handlers.NewMasterRouteHandler(masterRouteRepo)
 	districtRepo := database.NewDistrictRepository(db)
 	districtHandler := handlers.NewDistrictHandler(districtRepo)
+
+	// Initialize WebRTC signaling service and handler
+	signalingService := services.NewSignalingService()
+	signalingHandler := handlers.NewSignalingHandler(signalingService)
+	logger.Info("🎙️ WebRTC Signaling Service initialized")
 	loungeOwnerDistrictRepo := database.NewLoungeOwnerDistrictRepository(db)
 	loungeOwnerDistrictHandler := handlers.NewLoungeOwnerDistrictHandler(loungeOwnerDistrictRepo)
 
@@ -451,11 +456,11 @@ func main() {
 
 	// CORS configuration
 	corsConfig := cors.Config{
-		AllowOrigins:     cfg.CORS.AllowedOrigins,
-		AllowMethods:     cfg.CORS.AllowedMethods,
-		AllowHeaders:     cfg.CORS.AllowedHeaders,
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders:     []string{"*"},
 		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
+		AllowCredentials: false,
 		MaxAge:           12 * time.Hour,
 	}
 	router.Use(cors.New(corsConfig))
@@ -491,6 +496,9 @@ func main() {
 				"routes":       routeList,
 			})
 		})
+
+		// WebRTC Signaling WebSocket endpoint
+		v1.GET("/ws/call", signalingHandler.HandleWebSocket)
 
 		// Authentication routes (public)
 		auth := v1.Group("/auth")
