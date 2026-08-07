@@ -65,8 +65,8 @@ func (d *DialogURLGateway) SendOTP(phone, otpCode, appType string) (int64, error
 			otpCode)
 	}
 
-	fmt.Printf("📱 Using app hash: %s (Type: %s)\n", appHash, appType)
-	fmt.Printf("💬 Message: %s\n", message)
+	// fmt.Printf("📱 Using app hash: %s (Type: %s)\n", appHash, appType)
+	// fmt.Printf("💬 Message: %s\n", message)
 
 	// Build the URL with query parameters
 	baseURL := "https://e-sms.dialog.lk/api/v1/message-via-url/create/url-campaign"
