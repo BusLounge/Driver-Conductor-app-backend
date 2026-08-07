@@ -105,9 +105,7 @@ func (d *DialogURLGateway) SendOTP(phone, otpCode, appType string) (int64, error
 	return 0, fmt.Errorf("SMS sending failed with error code: %s", responseStr)
 }
 
-func FormatPhoneForDialog(phone string) (any, any) {
-	panic("unimplemented")
-}
+
 
 // SendMessage sends a plain text message via Dialog URL API.
 func (d *DialogURLGateway) SendMessage(phone, message string) (int64, error) {
