@@ -42,17 +42,6 @@ func (d *DialogURLGateway) SendOTP(phone, otpCode, appType string) (int64, error
 
 	fmt.Printf("📞 Formatted phone: %s\n", formattedPhone)
 
-	// Determine which app hash to use based on appType
-	var appHash string
-	switch appType {
-	case "driver", "conductor":
-		appHash = d.driverAppHash
-	case "passenger":
-		appHash = d.passengerAppHash
-	default:
-		// Default to passenger hash if not specified or unknown
-		appHash = d.passengerAppHash
-	}
 
 	// Create the message in its original template format to satisfy Dialog gateway rules
 	message := fmt.Sprintf("Your SmartTransit verification code is %s", otpCode)

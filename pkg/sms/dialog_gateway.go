@@ -254,19 +254,6 @@ func (d *DialogGateway) SendOTP(phone, otpCode, appType string) (int64, error) {
 	// Generate unique transaction ID (timestamp in microseconds)
 	transactionID := time.Now().UnixMicro()
 
-	// Determine which app hash to use based on appType
-	var appHash string
-	switch appType {
-	case "driver", "conductor":
-		appHash = d.driverAppHash
-	case "passenger":
-		appHash = d.passengerAppHash
-	default:
-		// Default to passenger hash if not specified or unknown
-		// This covers the case where appType is empty (legacy calls)
-		appHash = d.passengerAppHash
-	}
-
 	// Set up the message content
 	message := fmt.Sprintf("Your SmartTransit verification code is %s", otpCode)
 	// Prepare request
