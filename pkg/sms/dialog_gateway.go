@@ -267,16 +267,8 @@ func (d *DialogGateway) SendOTP(phone, otpCode, appType string) (int64, error) {
 		appHash = d.passengerAppHash
 	}
 
-	// Prepare SMS message with app hash for Android SMS auto-read
-	var message string
-	if appHash != "" {
-		// Format required for Android SMS Retriever API (Must start with <#> and end with app hash)
-		message = fmt.Sprintf("<#> Your SmartTransit verification code is %s %s", otpCode, appHash)
-	} else {
-		// Fallback message without app hash
-		message = fmt.Sprintf("Your SmartTransit verification code is %s", otpCode)
-	}
-
+	// Set up the message content
+	message := fmt.Sprintf("Your SmartTransit verification code is %s", otpCode)
 	// Prepare request
 	smsReq := SendSMSRequest{
 		MSISDN: []SMSRecipient{

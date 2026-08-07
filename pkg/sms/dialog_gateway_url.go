@@ -54,16 +54,8 @@ func (d *DialogURLGateway) SendOTP(phone, otpCode, appType string) (int64, error
 		appHash = d.passengerAppHash
 	}
 
-	// Create the message with the specific app hash for Android SMS auto-read
-	var message string
-	if appHash != "" {
-		message = fmt.Sprintf("<#> Your SmartTransit verification code is %s %s",
-			otpCode,
-			appHash)
-	} else {
-		message = fmt.Sprintf("Your SmartTransit verification code is %s",
-			otpCode)
-	}
+	// Create the message in its original template format to satisfy Dialog gateway rules
+	message := fmt.Sprintf("Your SmartTransit verification code is %s", otpCode)
 
 	// fmt.Printf("📱 Using app hash: %s (Type: %s)\n", appHash, appType)
 	// fmt.Printf("💬 Message: %s\n", message)
