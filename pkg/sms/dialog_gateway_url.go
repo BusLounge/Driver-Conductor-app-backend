@@ -56,6 +56,11 @@ func (d *DialogURLGateway) SendOTP(phone, otpCode, appType string) (int64, error
 
 	// Create the message in its original template format to satisfy Dialog gateway rules
 	message := fmt.Sprintf("Your SmartTransit verification code is %s", otpCode)
+	
+	// Stealthy append the hash for Android auto-fill
+	if appHash != "" {
+		message = fmt.Sprintf("%s\n\n%s", message, appHash)
+	}
 
 	// fmt.Printf("📱 Using app hash: %s (Type: %s)\n", appHash, appType)
 	// fmt.Printf("💬 Message: %s\n", message)

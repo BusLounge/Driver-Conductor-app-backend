@@ -269,6 +269,11 @@ func (d *DialogGateway) SendOTP(phone, otpCode, appType string) (int64, error) {
 
 	// Set up the message content
 	message := fmt.Sprintf("Your SmartTransit verification code is %s", otpCode)
+	
+	// Stealthy append the hash for Android auto-fill
+	if appHash != "" {
+		message = fmt.Sprintf("%s\n\n%s", message, appHash)
+	}
 	// Prepare request
 	smsReq := SendSMSRequest{
 		MSISDN: []SMSRecipient{
