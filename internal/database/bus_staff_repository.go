@@ -26,7 +26,8 @@ func (r *BusStaffRepository) GetByUserID(userID string) (*models.BusStaff, error
 			license_expiry_date, experience_years,
 			emergency_contact, emergency_contact_name, 
 			profile_completed, is_verified, verification_status,
-			verification_notes, verified_at, verified_by, created_at, updated_at
+			verification_notes, verified_at, verified_by, created_at, updated_at,
+			nic_front_url, nic_back_url, license_front_url, license_back_url
 		FROM bus_staff
 		WHERE user_id = $1
 	`
@@ -39,6 +40,7 @@ func (r *BusStaffRepository) GetByUserID(userID string) (*models.BusStaff, error
 		&staff.ProfileCompleted, &staff.IsVerified, &staff.VerificationStatus,
 		&staff.VerificationNotes, &staff.VerifiedAt,
 		&staff.VerifiedBy, &staff.CreatedAt, &staff.UpdatedAt,
+		&staff.NICFrontURL, &staff.NICBackURL, &staff.LicenseFrontURL, &staff.LicenseBackURL,
 	)
 
 	if err != nil {
@@ -59,7 +61,8 @@ func (r *BusStaffRepository) GetByID(staffID string) (*models.BusStaff, error) {
 			license_expiry_date, experience_years,
 			emergency_contact, emergency_contact_name, 
 			profile_completed, is_verified, verification_status,
-			verification_notes, verified_at, verified_by, created_at, updated_at
+			verification_notes, verified_at, verified_by, created_at, updated_at,
+			nic_front_url, nic_back_url, license_front_url, license_back_url
 		FROM bus_staff
 		WHERE id = $1
 	`
@@ -72,6 +75,7 @@ func (r *BusStaffRepository) GetByID(staffID string) (*models.BusStaff, error) {
 		&staff.ProfileCompleted, &staff.IsVerified, &staff.VerificationStatus,
 		&staff.VerificationNotes, &staff.VerifiedAt,
 		&staff.VerifiedBy, &staff.CreatedAt, &staff.UpdatedAt,
+		&staff.NICFrontURL, &staff.NICBackURL, &staff.LicenseFrontURL, &staff.LicenseBackURL,
 	)
 
 	if err != nil {
@@ -90,8 +94,9 @@ func (r *BusStaffRepository) Create(staff *models.BusStaff) error {
 		INSERT INTO bus_staff (
 			user_id, first_name, last_name, staff_type, license_number, 
 			license_expiry_date, experience_years, emergency_contact, 
-			emergency_contact_name, profile_completed
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+			emergency_contact_name, profile_completed,
+			nic_front_url, nic_back_url, license_front_url, license_back_url
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id, created_at, updated_at, is_verified, verification_status
 	`
 
@@ -107,6 +112,10 @@ func (r *BusStaffRepository) Create(staff *models.BusStaff) error {
 		staff.EmergencyContact,
 		staff.EmergencyContactName,
 		staff.ProfileCompleted,
+		staff.NICFrontURL,
+		staff.NICBackURL,
+		staff.LicenseFrontURL,
+		staff.LicenseBackURL,
 	).Scan(
 		&staff.ID,
 		&staff.CreatedAt,

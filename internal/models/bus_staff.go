@@ -52,6 +52,10 @@ type BusStaff struct {
 	VerifiedBy           *string                 `json:"verified_by,omitempty" db:"verified_by"`
 	CreatedAt            time.Time               `json:"created_at" db:"created_at"`
 	UpdatedAt            time.Time               `json:"updated_at" db:"updated_at"`
+	NICFrontURL          *string                 `json:"nic_front_url,omitempty" db:"nic_front_url"`
+	NICBackURL           *string                 `json:"nic_back_url,omitempty" db:"nic_back_url"`
+	LicenseFrontURL      *string                 `json:"license_front_url,omitempty" db:"license_front_url"`
+	LicenseBackURL       *string                 `json:"license_back_url,omitempty" db:"license_back_url"`
 }
 
 // BusStaffEmployment represents employment history of a staff member with a bus owner
@@ -89,6 +93,10 @@ type StaffRegistrationInput struct {
 	ExperienceYears      int       `json:"experience_years"`
 	EmergencyContact     string    `json:"emergency_contact" binding:"required"`
 	EmergencyContactName string    `json:"emergency_contact_name" binding:"required"`
+	NICFrontURL          *string   `json:"nic_front_url"`
+	NICBackURL           *string   `json:"nic_back_url"`
+	LicenseFrontURL      *string   `json:"license_front_url"`
+	LicenseBackURL       *string   `json:"license_back_url"`
 }
 
 // StaffProfileUpdate represents input for profile updates

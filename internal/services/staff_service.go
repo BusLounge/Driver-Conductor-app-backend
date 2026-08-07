@@ -63,6 +63,10 @@ func (s *StaffService) RegisterStaff(input *models.StaffRegistrationInput) (*mod
 		EmergencyContact:     &input.EmergencyContact,
 		EmergencyContactName: &input.EmergencyContactName,
 		ProfileCompleted:     true, // Mark as completed after initial registration
+		NICFrontURL:          input.NICFrontURL,
+		NICBackURL:           input.NICBackURL,
+		LicenseFrontURL:      input.LicenseFrontURL,
+		LicenseBackURL:       input.LicenseBackURL,
 	}
 
 	// Handle driver-specific fields
