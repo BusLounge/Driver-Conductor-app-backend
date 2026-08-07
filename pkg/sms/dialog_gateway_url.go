@@ -54,13 +54,8 @@ func (d *DialogURLGateway) SendOTP(phone, otpCode, appType string) (int64, error
 		appHash = d.passengerAppHash
 	}
 
-	// Match the exact approved template for Dialog
-	message := fmt.Sprintf("Your SmartTransit OTP is: %s\n\nPlease use the above OTP to complete your action.\n\nRegards,\nSmartTransit", otpCode)
-	
-	// Append the hash for Android auto-fill
-	if appHash != "" {
-		message = fmt.Sprintf("%s\n%s", message, appHash)
-	}
+	// Create the message in its original template format to satisfy Dialog gateway rules
+	message := fmt.Sprintf("Your SmartTransit verification code is %s", otpCode)
 
 	// fmt.Printf("📱 Using app hash: %s (Type: %s)\n", appHash, appType)
 	// fmt.Printf("💬 Message: %s\n", message)
@@ -119,6 +114,10 @@ func (d *DialogURLGateway) SendOTP(phone, otpCode, appType string) (int64, error
 	// Failed - response is an error ID
 	fmt.Printf("❌ SMS sending failed with error code: %s\n", responseStr)
 	return 0, fmt.Errorf("SMS sending failed with error code: %s", responseStr)
+}
+
+func FormatPhoneForDialog(phone string) (any, any) {
+	panic("unimplemented")
 }
 
 // SendMessage sends a plain text message via Dialog URL API.
