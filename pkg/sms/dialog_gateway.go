@@ -69,7 +69,7 @@ type LoginResponse struct {
 	Token      string      `json:"token"`
 	Expiration int         `json:"expiration"` // Token expiry in seconds
 	UserData   interface{} `json:"userData"`
-	ErrCode    string      `json:"errCode"`
+	ErrCode    interface{} `json:"errCode"`
 }
 
 // SMSRecipient represents a single SMS recipient
@@ -165,7 +165,7 @@ func (d *DialogGateway) GetAccessToken() error {
 	}
 
 	if loginResp.Status != "success" {
-		return fmt.Errorf("login failed: %s (error code: %s)", loginResp.Comment, loginResp.ErrCode)
+		return fmt.Errorf("login failed: %s (error code: %v)", loginResp.Comment, loginResp.ErrCode)
 	}
 
 	// Store token with expiry
