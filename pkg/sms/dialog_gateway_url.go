@@ -42,6 +42,7 @@ func (d *DialogURLGateway) SendOTP(phone, otpCode, appType string) (int64, error
 
 	fmt.Printf("📞 Formatted phone: %s\n", formattedPhone)
 
+
 	// Create the message in its original template format to satisfy Dialog gateway rules
 	message := fmt.Sprintf("Your SmartTransit verification code is %s", otpCode)
 
@@ -104,6 +105,8 @@ func (d *DialogURLGateway) SendOTP(phone, otpCode, appType string) (int64, error
 	return 0, fmt.Errorf("SMS sending failed with error code: %s", responseStr)
 }
 
+
+
 // SendMessage sends a plain text message via Dialog URL API.
 func (d *DialogURLGateway) SendMessage(phone, message string) (int64, error) {
 	if strings.TrimSpace(message) == "" {
@@ -146,10 +149,6 @@ func (d *DialogURLGateway) SendMessage(phone, message string) (int64, error) {
 	}
 
 	return 0, fmt.Errorf("SMS sending failed with error code: %s", responseStr)
-}
-
-func FormatPhoneForDialog(phone string) (any, any) {
-	panic("unimplemented")
 }
 
 // SendOTPWithHash sends an OTP - kept for backward compatibility but now just calls SendOTP
