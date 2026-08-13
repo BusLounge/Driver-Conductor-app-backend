@@ -646,9 +646,9 @@ func (r *AppBookingRepository) GetSeatsByBusBookingID(busBookingID string) ([]mo
 	// Custom struct for scanning with JOINed data
 	type seatWithDetails struct {
 		models.BusBookingSeat
-		SeatNumberDB string  `db:"seat_number"`
-		SeatTypeDB   string  `db:"seat_type"`
-		SeatPriceDB  float64 `db:"seat_price"`
+		SeatNumberDB *string  `db:"seat_number"`
+		SeatTypeDB   *string  `db:"seat_type"`
+		SeatPriceDB  *float64 `db:"seat_price"`
 	}
 
 	var rawSeats []seatWithDetails
@@ -661,9 +661,15 @@ func (r *AppBookingRepository) GetSeatsByBusBookingID(busBookingID string) ([]mo
 	seats := make([]models.BusBookingSeat, len(rawSeats))
 	for i, raw := range rawSeats {
 		seats[i] = raw.BusBookingSeat
-		seats[i].SeatNumber = raw.SeatNumberDB
-		seats[i].SeatType = raw.SeatTypeDB
-		seats[i].SeatPrice = raw.SeatPriceDB
+		if raw.SeatNumberDB != nil {
+			seats[i].SeatNumber = *raw.SeatNumberDB
+		}
+		if raw.SeatTypeDB != nil {
+			seats[i].SeatType = *raw.SeatTypeDB
+		}
+		if raw.SeatPriceDB != nil {
+			seats[i].SeatPrice = *raw.SeatPriceDB
+		}
 	}
 
 	return seats, nil
