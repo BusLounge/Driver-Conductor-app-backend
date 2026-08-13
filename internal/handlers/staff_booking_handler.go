@@ -73,6 +73,8 @@ func (h *StaffBookingHandler) VerifyBookingByQR(c *gin.Context) {
 		"status":             busBooking.Status,
 		"is_checked_in":      busBooking.CheckedInAt != nil,
 		"check_in_time":      busBooking.CheckedInAt,
+		"total_fare":         busBooking.TotalFare,
+		"payment_status":     "paid", // typically paid before receiving QR
 		"seats":              busBooking.Seats,
 	})
 }
