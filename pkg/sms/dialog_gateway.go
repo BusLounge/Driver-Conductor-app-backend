@@ -82,7 +82,7 @@ type SendSMSRequest struct {
 	MSISDN        []SMSRecipient `json:"msisdn"`
 	Message       string         `json:"message"`
 	SourceAddress string         `json:"sourceAddress,omitempty"`
-	TransactionID int64          `json:"transaction_id"`
+	TransactionID int64          `json:"transaction_id,string"`
 	PaymentMethod int            `json:"payment_method,omitempty"` // 0 = wallet, 4 = package
 }
 
@@ -103,7 +103,7 @@ type SendSMSResponse struct {
 
 // CheckStatusRequest represents campaign status check request
 type CheckStatusRequest struct {
-	TransactionID int64 `json:"transaction_id"`
+	TransactionID int64 `json:"transaction_id,string"`
 }
 
 // CheckStatusResponse represents campaign status check response
@@ -114,7 +114,7 @@ type CheckStatusResponse struct {
 		CampaignStatus string `json:"campaign_status"` // pending, running, completed
 	} `json:"data"`
 	ErrCode       string `json:"errCode"`
-	TransactionID int64  `json:"transaction_id"`
+	TransactionID int64  `json:"transaction_id,string"`
 }
 
 // GetAccessToken logs in and retrieves an access token
