@@ -155,14 +155,14 @@ func Load() (*Config, error) {
 		},
 		SMS: SMSConfig{
 			Mode:             getEnv("SMS_MODE", "dev"),          // "dev" or "production"
-			Method:           getEnv("DIALOG_SMS_METHOD", "url"), // "url" or "api_v2"
+			Method:           getEnv("DIALOG_SMS_METHOD", "api_v2"), // Default to "api_v2"
 			APIURL:           getEnv("DIALOG_SMS_API_URL", "https://e-sms.dialog.lk/api/v2"),
 			ESMSQK:           getEnv("DIALOG_SMS_ESMSQK", ""),
 			Username:         getEnv("DIALOG_SMS_USERNAME", ""),
 			Password:         getEnv("DIALOG_SMS_PASSWORD", ""),
 			Mask:             getEnv("DIALOG_SMS_MASK", ""),
 			DriverAppHash:    getEnv("DRIVER_APP_HASH", "Yhr+pPC1+tw"),    // SMS auto-read for driver app
-			PassengerAppHash: getEnv("PASSENGER_APP_HASH", "Yhr+pPC1+tw"), // SMS auto-read for passenger app
+			PassengerAppHash: getEnv("PASSENGER_APP_HASH", "P4m/VJkG0UX"), // SMS auto-read for passenger app
 			// Deprecated fields kept for backward compatibility
 			APIKey:   getEnv("DIALOG_SMS_API_KEY", ""),
 			SenderID: getEnv("DIALOG_SMS_SENDER_ID", "SmartTransit"),
