@@ -6,8 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/smarttransit/sms-auth-backend/internal/config"
 )
@@ -63,25 +62,20 @@ func NewConnection(cfg config.DatabaseConfig) (DB, error) {
 
 	fmt.Printf("INFO: Final connection URL: %s\n", maskPassword(connectionURL))
 
-	// Parse pgx config from connection URL
-	pgxConfig, err := pgx.ParseConfig(connectionURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse database URL: %w", err)
-	}
-
 	// Enable simple protocol mode for connection poolers (Supavisor/PgBouncer)
 	// This disables prepared statements which cause "unnamed prepared statement does not exist" errors
 	// with transaction-mode pooling
 	if usingPooler {
-		pgxConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+		separator := "?"
+		if strings.Contains(connectionURL, "?") {
+			separator = "&"
+		}
+		connectionURL = connectionURL + separator + "default_query_exec_mode=simple_protocol"
 		fmt.Printf("INFO: Using QueryExecModeSimpleProtocol (fixes pooler prepared statement issues)\n")
 	}
 
-	// Register the pgx driver with our config
-	connStr := stdlib.RegisterConnConfig(pgxConfig)
-
-	// Connect using sqlx with the registered pgx driver
-	db, err := sqlx.Connect("pgx", connStr)
+	// Connect using sqlx with the pgx driver
+	db, err := sqlx.Connect("pgx", connectionURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
