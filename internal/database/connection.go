@@ -3,10 +3,12 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/smarttransit/sms-auth-backend/internal/config"
 )
@@ -44,7 +46,7 @@ func NewConnection(cfg config.DatabaseConfig) (DB, error) {
 	// Remove any accidental trailing newlines, spaces, or quotes from the environment variable
 	connectionURL := strings.TrimSpace(cfg.URL)
 	connectionURL = strings.Trim(connectionURL, `"'`)
-	
+
 	fmt.Printf("INFO: Original database URL: %s\n", maskPassword(connectionURL))
 
 	// Add sslmode if not present (required for Supabase)
@@ -65,23 +67,51 @@ func NewConnection(cfg config.DatabaseConfig) (DB, error) {
 
 	fmt.Printf("INFO: Final connection URL: %s\n", maskPassword(connectionURL))
 
+	// =========================================================================
+	// CRITICAL FIX: Clear ALL PostgreSQL environment variables BEFORE pgx parses
+	// the connection URL. Choreo's Cloud Native Buildpack (CNB) sets:
+	//   USER=cnb, PGHOST=/tmp, PGUSER=cnb, etc.
+	// pgx.ParseConfig() merges env vars with the URL, and if URL parsing has
+	// any issue, it falls back to these env vars -> user=cnb, host=/tmp socket.
+	// By clearing them first, pgx can ONLY use our explicit DATABASE_URL.
+	// =========================================================================
+	for _, key := range []string{
+		"PGHOST", "PGPORT", "PGUSER", "PGPASSWORD", "PGDATABASE",
+		"PGSSLMODE", "PGSSLCERT", "PGSSLKEY", "PGSSLROOTCERT",
+		"PGSERVICEFILE", "PGSERVICE", "PGTARGETSESSIONATTRS",
+		"PGAPPNAME", "PGCONNECT_TIMEOUT",
+	} {
+		os.Unsetenv(key)
+	}
+	fmt.Printf("INFO: Cleared PG* environment variables to prevent buildpack interference\n")
+
+	// Parse the connection URL with pgx (now safe from env var interference)
+	pgxConfig, err := pgx.ParseConfig(connectionURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse database URL: %w", err)
+	}
+
+	// Log parsed values for debugging (never log password)
+	fmt.Printf("INFO: Parsed config - Host=%s Port=%d User=%s Database=%s\n",
+		pgxConfig.Host, pgxConfig.Port, pgxConfig.User, pgxConfig.Database)
+
 	// Enable simple protocol mode for connection poolers (Supavisor/PgBouncer)
 	// This disables prepared statements which cause "unnamed prepared statement does not exist" errors
-	// with transaction-mode pooling
 	if usingPooler {
-		separator := "?"
-		if strings.Contains(connectionURL, "?") {
-			separator = "&"
-		}
-		connectionURL = connectionURL + separator + "default_query_exec_mode=simple_protocol"
+		pgxConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 		fmt.Printf("INFO: Using QueryExecModeSimpleProtocol (fixes pooler prepared statement issues)\n")
 	}
 
-	// Connect using sqlx with the pgx driver
-	db, err := sqlx.Connect("pgx", connectionURL)
+	// Register the explicit config to get a connection key (bypasses any further env var reads)
+	connStr := stdlib.RegisterConnConfig(pgxConfig)
+
+	// Connect using sqlx with the registered pgx config
+	db, err := sqlx.Connect("pgx", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
+
+	fmt.Printf("INFO: Database connection established successfully\n")
 
 	// Configure connection pool for better stability with connection poolers
 	db.SetMaxOpenConns(cfg.MaxConnections)
