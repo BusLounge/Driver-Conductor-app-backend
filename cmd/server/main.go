@@ -467,6 +467,16 @@ func main() {
 
 	// Health check endpoint
 	router.GET("/health", healthCheckHandler(db))
+	
+	// Debug SMS config endpoint
+	router.GET("/debug/sms", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"mode": cfg.SMS.Mode,
+			"method": cfg.SMS.Method,
+			"api_url": cfg.SMS.APIURL,
+			"mask": cfg.SMS.Mask,
+		})
+	})
 
 	// Set environment in context for development mode
 	router.Use(func(c *gin.Context) {
