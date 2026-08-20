@@ -41,8 +41,11 @@ func NewConnection(cfg config.DatabaseConfig) (DB, error) {
 		return nil, fmt.Errorf("database URL is required")
 	}
 
-	connectionURL := cfg.URL
-	fmt.Printf("INFO: Original database URL: %s\n", maskPassword(cfg.URL))
+	// Remove any accidental trailing newlines, spaces, or quotes from the environment variable
+	connectionURL := strings.TrimSpace(cfg.URL)
+	connectionURL = strings.Trim(connectionURL, `"'`)
+	
+	fmt.Printf("INFO: Original database URL: %s\n", maskPassword(connectionURL))
 
 	// Add sslmode if not present (required for Supabase)
 	if !strings.Contains(connectionURL, "sslmode") {
