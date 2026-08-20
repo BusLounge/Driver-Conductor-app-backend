@@ -154,7 +154,7 @@ func Load() (*Config, error) {
 			RefreshTokenExpiry: time.Duration(getEnvAsInt("JWT_REFRESH_TOKEN_EXPIRY", 604800)) * time.Second,
 		},
 		SMS: SMSConfig{
-			Mode:             getEnv("SMS_MODE", "dev"),          // "dev" or "production"
+			Mode:             getEnv("SMS_MODE", "dev"),             // "dev" or "production"
 			Method:           getEnv("DIALOG_SMS_METHOD", "api_v2"), // Default to "api_v2"
 			APIURL:           getEnv("DIALOG_SMS_API_URL", "https://e-sms.dialog.lk/api/v2"),
 			ESMSQK:           getEnv("DIALOG_SMS_ESMSQK", ""),
