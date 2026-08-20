@@ -91,12 +91,12 @@ type SendSMSResponse struct {
 	Status  string `json:"status"`
 	Comment string `json:"comment"`
 	Data    struct {
-		CampaignID         int           `json:"campaignId"`
-		CampaignCost       float64       `json:"campaignCost"`
-		WalletBalance      FlexibleFloat `json:"walletBalance"`
-		DuplicatesRemoved  int           `json:"duplicatesRemoved"`
-		InvalidNumbers     int           `json:"invalidNumbers"`
-		MaskBlockedNumbers int           `json:"mask_blocked_numbers"`
+		CampaignID         int         `json:"campaignId"`
+		CampaignCost       float64     `json:"campaignCost"`
+		WalletBalance      interface{} `json:"walletBalance"`
+		DuplicatesRemoved  int         `json:"duplicatesRemoved"`
+		InvalidNumbers     int         `json:"invalidNumbers"`
+		MaskBlockedNumbers int         `json:"mask_blocked_numbers"`
 	} `json:"data"`
 	ErrCode string `json:"errCode"`
 }
