@@ -66,10 +66,10 @@ func (r *UserSessionRepository) CreateOrUpdateSession(
 		nullString(osVersion),
 		nullString(fcmToken),
 		nullString(ipAddress),
-		now,    // last_activity_at
-		true,   // is_active
-		now,    // created_at
-		now,    // updated_at
+		now,  // last_activity_at
+		true, // is_active
+		now,  // created_at
+		now,  // updated_at
 	).Scan(
 		&session.ID,
 		&session.UserID,
@@ -396,7 +396,7 @@ func (r *UserSessionRepository) GetActiveSessionsByUserID(userID uuid.UUID) ([]*
 			&session.DeviceModel,
 			&session.AppVersion,
 			&session.OSVersion,
-			&session.OneSignalPlayerID,  // Changed from FCMToken
+			&session.OneSignalPlayerID, // Changed from FCMToken
 			&session.IPAddress,
 			&session.LocationPermission,
 			&session.NotificationPermission,

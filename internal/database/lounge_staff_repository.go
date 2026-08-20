@@ -447,7 +447,7 @@ func (r *LoungeStaffRepository) GetStaffByLoungeIDAndUserID(ctx context.Context,
 
 // GetApprovedStaffByUserID retrieves an approved and active lounge staff by user ID
 // Returns error if staff is not approved or not active
-func (r *LoungeStaffRepository) GetApprovedStaffaByUserID(userID uuid.UUID)(*models.LoungeStaff,error){
+func (r *LoungeStaffRepository) GetApprovedStaffaByUserID(userID uuid.UUID) (*models.LoungeStaff, error) {
 
 	query := `
 		SELECT

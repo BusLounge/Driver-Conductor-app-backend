@@ -11,10 +11,10 @@ import (
 
 // NotificationService handles notification operations
 type NotificationService struct {
-	oneSignalService  *onesignal.OneSignalService
-	userSessionRepo   *database.UserSessionRepository
-	loungeRepo        *database.LoungeRepository
-	loungeOwnerRepo   *database.LoungeOwnerRepository
+	oneSignalService *onesignal.OneSignalService
+	userSessionRepo  *database.UserSessionRepository
+	loungeRepo       *database.LoungeRepository
+	loungeOwnerRepo  *database.LoungeOwnerRepository
 }
 
 // NewNotificationService creates a new notification service

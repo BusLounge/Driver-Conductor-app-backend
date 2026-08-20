@@ -67,26 +67,26 @@ func (nt *NullTime) UnmarshalJSON(data []byte) error {
 
 // User represents a user in the system
 type User struct {
-	ID               uuid.UUID    `json:"id" db:"id"`
-	Phone            string       `json:"phone" db:"phone"`
-	Email            NullString   `json:"email,omitempty" db:"email"`
-	FirstName        NullString   `json:"first_name,omitempty" db:"first_name"`
-	LastName         NullString   `json:"last_name,omitempty" db:"last_name"`
-	NIC              NullString   `json:"nic,omitempty" db:"nic"`
-	DateOfBirth      NullTime     `json:"date_of_birth,omitempty" db:"date_of_birth"`
-	Address          NullString   `json:"address,omitempty" db:"address"`
-	City             NullString   `json:"city,omitempty" db:"city"`
-	PostalCode       NullString   `json:"postal_code,omitempty" db:"postal_code"`
+	ID               uuid.UUID      `json:"id" db:"id"`
+	Phone            string         `json:"phone" db:"phone"`
+	Email            NullString     `json:"email,omitempty" db:"email"`
+	FirstName        NullString     `json:"first_name,omitempty" db:"first_name"`
+	LastName         NullString     `json:"last_name,omitempty" db:"last_name"`
+	NIC              NullString     `json:"nic,omitempty" db:"nic"`
+	DateOfBirth      NullTime       `json:"date_of_birth,omitempty" db:"date_of_birth"`
+	Address          NullString     `json:"address,omitempty" db:"address"`
+	City             NullString     `json:"city,omitempty" db:"city"`
+	PostalCode       NullString     `json:"postal_code,omitempty" db:"postal_code"`
 	Roles            pq.StringArray `json:"roles" db:"roles"`
-	ProfilePhotoURL  NullString   `json:"profile_photo_url,omitempty" db:"profile_photo_url"`
-	ProfileCompleted bool         `json:"profile_completed" db:"profile_completed"`
-	Status           string       `json:"status" db:"status"`
-	PhoneVerified    bool         `json:"phone_verified" db:"phone_verified"`
-	EmailVerified    bool         `json:"email_verified" db:"email_verified"`
-	LastLoginAt      NullTime     `json:"last_login_at,omitempty" db:"last_login_at"`
-	Metadata         NullString   `json:"metadata,omitempty" db:"metadata"`
-	CreatedAt        time.Time    `json:"created_at" db:"created_at"`
-	UpdatedAt        time.Time    `json:"updated_at" db:"updated_at"`
+	ProfilePhotoURL  NullString     `json:"profile_photo_url,omitempty" db:"profile_photo_url"`
+	ProfileCompleted bool           `json:"profile_completed" db:"profile_completed"`
+	Status           string         `json:"status" db:"status"`
+	PhoneVerified    bool           `json:"phone_verified" db:"phone_verified"`
+	EmailVerified    bool           `json:"email_verified" db:"email_verified"`
+	LastLoginAt      NullTime       `json:"last_login_at,omitempty" db:"last_login_at"`
+	Metadata         NullString     `json:"metadata,omitempty" db:"metadata"`
+	CreatedAt        time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt        time.Time      `json:"updated_at" db:"updated_at"`
 }
 
 // OTPVerification represents an OTP verification record
@@ -155,22 +155,22 @@ type UserSession struct {
 	LastActivityAt         time.Time  `json:"last_activity_at" db:"last_activity_at"`
 	IsActive               bool       `json:"is_active" db:"is_active"`
 	// New addition OneSignal PlayerID
-	OneSignalPlayerID      NullString `json:"one_signal_player_id" db:"one_signal_player_id"`
-	CreatedAt              time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt              time.Time  `json:"updated_at" db:"updated_at"`
+	OneSignalPlayerID NullString `json:"one_signal_player_id" db:"one_signal_player_id"`
+	CreatedAt         time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 // AuditLog represents an audit log entry
 type AuditLog struct {
-	ID         int64      `json:"id" db:"id"`
-	UserID     uuid.NullUUID  `json:"user_id,omitempty" db:"user_id"`
-	Action     string     `json:"action" db:"action"`
-	EntityType NullString `json:"entity_type,omitempty" db:"entity_type"`
-	EntityID   uuid.NullUUID  `json:"entity_id,omitempty" db:"entity_id"`
-	IPAddress  NullString `json:"ip_address,omitempty" db:"ip_address"`
-	UserAgent  NullString `json:"user_agent,omitempty" db:"user_agent"`
-	Details    NullString `json:"details,omitempty" db:"details"`
-	CreatedAt  time.Time  `json:"created_at" db:"created_at"`
+	ID         int64         `json:"id" db:"id"`
+	UserID     uuid.NullUUID `json:"user_id,omitempty" db:"user_id"`
+	Action     string        `json:"action" db:"action"`
+	EntityType NullString    `json:"entity_type,omitempty" db:"entity_type"`
+	EntityID   uuid.NullUUID `json:"entity_id,omitempty" db:"entity_id"`
+	IPAddress  NullString    `json:"ip_address,omitempty" db:"ip_address"`
+	UserAgent  NullString    `json:"user_agent,omitempty" db:"user_agent"`
+	Details    NullString    `json:"details,omitempty" db:"details"`
+	CreatedAt  time.Time     `json:"created_at" db:"created_at"`
 }
 
 // Helper type for nullable UUID

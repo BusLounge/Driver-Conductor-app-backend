@@ -4,19 +4,19 @@ import (
 	"database/sql"
 	"fmt"
 	// "time"
-	"log"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/smarttransit/sms-auth-backend/internal/models"
+	"log"
 )
 
 // LoungeTransportLocationPriceRepository handles database operations for lounge transport location prices
-type LoungeTransportLocationPriceRepository struct{
+type LoungeTransportLocationPriceRepository struct {
 	db *sqlx.DB
 }
 
 //NewLoungeTransportLocationPriceRepository creates a new lounge staff repository
-func NewLoungeTransportLocationPriceRepository(db *sqlx.DB) *LoungeTransportLocationPriceRepository{
+func NewLoungeTransportLocationPriceRepository(db *sqlx.DB) *LoungeTransportLocationPriceRepository {
 	return &LoungeTransportLocationPriceRepository{db: db}
 }
 
@@ -24,9 +24,9 @@ func NewLoungeTransportLocationPriceRepository(db *sqlx.DB) *LoungeTransportLoca
 func (r *LoungeTransportLocationPriceRepository) SetLoungeTransportLocationPrices(
 	loungeID, locationID uuid.UUID,
 	threeWheelerPrice, carPrice, vanPrice float64,
-)(*models.LoungeTransportLocationPrice,error){
+) (*models.LoungeTransportLocationPrice, error) {
 
-	query :=`
+	query := `
 			INSERT INTO lounge_transport_location_prices
 			(lounge_id,location_id,three_wheeler_price,car_price,van_price)
 			VALUES($1,$2,$3,$4,$5)
@@ -44,18 +44,16 @@ func (r *LoungeTransportLocationPriceRepository) SetLoungeTransportLocationPrice
 	err := r.db.Get(&price, query, loungeID, locationID, threeWheelerPrice, carPrice, vanPrice)
 	if err != nil {
 		log.Printf("ERROR: Failed to set prices for location %s in lounge %s: %v", locationID, loungeID, err)
-        return nil, fmt.Errorf("failed to set prices: %w", err)
+		return nil, fmt.Errorf("failed to set prices: %w", err)
 	}
 
 	return &price, nil
 }
 
-
-
 // get lounge transport location prices for a specific lounge
 func (r *LoungeTransportLocationPriceRepository) GetLoungeTransportLocationPrices(
-	loungeID,locationID uuid.UUID,
-)(*models.LoungeTransportLocationPrice,error){
+	loungeID, locationID uuid.UUID,
+) (*models.LoungeTransportLocationPrice, error) {
 	// creating the variable to store returning struct
 	var price models.LoungeTransportLocationPrice
 	query := `
@@ -63,37 +61,14 @@ func (r *LoungeTransportLocationPriceRepository) GetLoungeTransportLocationPrice
         FROM lounge_transport_location_prices
         WHERE lounge_id = $1 AND location_id = $2`
 
-
 	err := r.db.Get(&price, query, loungeID, locationID)
 	if err == sql.ErrNoRows {
-        return nil, nil // No prices set yet
-    }
+		return nil, nil // No prices set yet
+	}
 	if err != nil {
-        log.Printf("ERROR: Failed to get prices for location %s in lounge %s: %v", locationID, loungeID, err)
-        return nil, fmt.Errorf("failed to get prices: %w", err)
-    }
+		log.Printf("ERROR: Failed to get prices for location %s in lounge %s: %v", locationID, loungeID, err)
+		return nil, fmt.Errorf("failed to get prices: %w", err)
+	}
 
-	return &price,nil
+	return &price, nil
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

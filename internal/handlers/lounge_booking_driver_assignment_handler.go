@@ -846,4 +846,3 @@ func (h *LoungeBookingDriverAssignmentHandler) sendPassengerCompletionSMS(passen
 
 	log.Printf("INFO: Completion SMS sent to passenger %s", phone)
 }
-

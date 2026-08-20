@@ -40,7 +40,7 @@ func scanPackageRow(row interface {
 		lunchType        []byte
 		eveningSnackType []byte
 		dinnerType       []byte
-		places          []byte
+		places           []byte
 		transportModeStr sql.NullString
 	)
 

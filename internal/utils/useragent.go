@@ -34,12 +34,12 @@ func ParseUserAgent(userAgent string) DeviceInfo {
 	parser := ua.New(userAgent)
 
 	deviceInfo := DeviceInfo{
-		Raw:    userAgent,
-		IsBot:  parser.Bot(),
-		OS:     getOS(parser),
-		Browser: getBrowser(parser),
+		Raw:        userAgent,
+		IsBot:      parser.Bot(),
+		OS:         getOS(parser),
+		Browser:    getBrowser(parser),
 		BrowserVer: getBrowserVersion(parser),
-		Platform: getPlatform(parser),
+		Platform:   getPlatform(parser),
 	}
 
 	// Determine device type
@@ -125,15 +125,15 @@ func getPlatform(parser *ua.UserAgent) string {
 	osName := strings.ToLower(osInfo.Name)
 
 	platformMap := map[string]string{
-		"android":     "android",
-		"ios":         "ios",
-		"iphone os":   "ios",
-		"windows":     "windows",
-		"mac os x":    "mac",
-		"macos":       "mac",
-		"linux":       "linux",
-		"ubuntu":      "linux",
-		"chrome os":   "chromeos",
+		"android":   "android",
+		"ios":       "ios",
+		"iphone os": "ios",
+		"windows":   "windows",
+		"mac os x":  "mac",
+		"macos":     "mac",
+		"linux":     "linux",
+		"ubuntu":    "linux",
+		"chrome os": "chromeos",
 	}
 
 	for key, platform := range platformMap {

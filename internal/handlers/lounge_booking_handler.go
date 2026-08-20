@@ -1191,9 +1191,9 @@ type CancelLoungeBookingRequest struct {
 
 // CheckInCheckOutRequest represents a check-in or check-out request with location
 type CheckInCheckOutRequest struct {
-	Latitude  *float64 `json:"latitude,omitempty" binding:"omitempty"`   // Optional location data
-	Longitude *float64 `json:"longitude,omitempty" binding:"omitempty"` // Optional location data
-	LocationName *string `json:"location_name,omitempty"`               // Optional human-readable location
+	Latitude     *float64 `json:"latitude,omitempty" binding:"omitempty"`  // Optional location data
+	Longitude    *float64 `json:"longitude,omitempty" binding:"omitempty"` // Optional location data
+	LocationName *string  `json:"location_name,omitempty"`                 // Optional human-readable location
 }
 
 // ToggleBookingCheckInOut handles POST /api/v1/lounge-bookings/:id/check-in-out
@@ -2062,13 +2062,13 @@ func (h *LoungeBookingHandler) GetBookingOrders(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"booking":            booking,
-		"orders":             orders,
-		"booking_id":         bookingID,
-		"orders_count":       len(orders),
+		"booking":             booking,
+		"orders":              orders,
+		"booking_id":          bookingID,
+		"orders_count":        len(orders),
 		"ordered_items_count": orderedItemsCount,
 		"orders_total_amount": strconv.FormatFloat(ordersTotalAmount, 'f', 2, 64),
-		"date":               orderDate,
+		"date":                orderDate,
 	})
 }
 

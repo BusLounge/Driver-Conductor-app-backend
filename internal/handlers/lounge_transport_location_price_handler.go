@@ -7,10 +7,10 @@ import (
 	"github.com/smarttransit/sms-auth-backend/internal/models"
 
 	// "github.com/smarttransit/sms-auth-backend/internal/models"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"time"
-	"github.com/google/uuid"
 )
 
 // LoungeTransportLocationPriceHandler handles HTTP requests related to lounge transport location prices
@@ -165,7 +165,6 @@ func (h *LoungeTransportLocationPriceHandler) SetLoungeTransportLocationPrices(c
 
 }
 
-
 // get transport location prices related to a lounge (three_wheeler,car,van) prices
 func (h *LoungeTransportLocationPriceHandler) GetLoungeTransportLocationPrices(c *gin.Context) {
 
@@ -235,7 +234,7 @@ func (h *LoungeTransportLocationPriceHandler) GetLoungeTransportLocationPrices(c
 	}
 
 	// get the prices by using the repository
-	receivedPrices,err:=h.loungeTransportLocationPriceRepo.GetLoungeTransportLocationPrices(loungeID,locationID)
+	receivedPrices, err := h.loungeTransportLocationPriceRepo.GetLoungeTransportLocationPrices(loungeID, locationID)
 	if err != nil {
 		log.Printf("ERROR: Failed to get transport location prices for location %s in lounge %s: %v", locationID, loungeID, err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -246,19 +245,19 @@ func (h *LoungeTransportLocationPriceHandler) GetLoungeTransportLocationPrices(c
 	}
 	if receivedPrices == nil {
 		// No prices set yet — return defaults
-    defaultPrices := models.LoungeTransportLocationPrice{
-        LoungeID:          loungeID,
-        LocationID:        locationID,
-        ThreeWheelerPrice: 0,
-        CarPrice:          0,
-        VanPrice:          0,
-        UpdatedAt:         time.Time{}, // zero time
-    }
-    c.JSON(http.StatusOK, defaultPrices)
-    return
+		defaultPrices := models.LoungeTransportLocationPrice{
+			LoungeID:          loungeID,
+			LocationID:        locationID,
+			ThreeWheelerPrice: 0,
+			CarPrice:          0,
+			VanPrice:          0,
+			UpdatedAt:         time.Time{}, // zero time
+		}
+		c.JSON(http.StatusOK, defaultPrices)
+		return
 	}
 
 	// sending back the dataset with the length
-	c.JSON(http.StatusOK,receivedPrices)
+	c.JSON(http.StatusOK, receivedPrices)
 
 }

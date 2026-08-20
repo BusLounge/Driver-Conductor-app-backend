@@ -239,16 +239,6 @@ func (h *AuthHandler) SendOTP(c *gin.Context) {
 	// Check SMS configuration before attempting to send
 	if h.config.SMS.Mode == "production" {
 		// Validate SMS configuration
-		if h.config.SMS.Method == "url" && h.config.SMS.ESMSQK == "" {
-			log.Printf("❌ ERROR: SMS API key (DIALOG_SMS_ESMSQK) is not configured")
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   "sms_not_configured",
-				"message": "SMS gateway is not properly configured. Please contact support.",
-				"details": "Dialog API key not set",
-			})
-			return
-		}
-
 		if h.config.SMS.Mask == "" {
 			log.Printf("❌ ERROR: SMS Mask (DIALOG_SMS_MASK) is not configured")
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -264,10 +254,6 @@ func (h *AuthHandler) SendOTP(c *gin.Context) {
 	if h.config.SMS.Mode == "production" {
 		// Production mode: Send actual SMS via Dialog gateway
 		log.Printf("🔵 Attempting to send SMS to %s via Dialog gateway (App: %s)...", phone, req.AppType)
-		log.Printf("📝 SMS Method: %s", h.config.SMS.Method)
-		if h.config.SMS.Method == "url" {
-			log.Printf("📝 Using API Key: %s****", h.config.SMS.ESMSQK[:3])
-		}
 		log.Printf("📝 SMS Mask: %s", h.config.SMS.Mask)
 
 		transactionID, err := h.smsGateway.SendOTP(phone, otp, req.AppType)

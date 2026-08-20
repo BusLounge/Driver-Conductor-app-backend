@@ -159,23 +159,16 @@ func main() {
 	if cfg.SMS.Mode == "production" {
 		logger.Info("Initializing Dialog SMS Gateway in production mode...")
 
-		// Choose gateway based on method
-		if cfg.SMS.Method == "url" {
-			logger.Info("Using Dialog URL method (GET request with esmsqk)")
-			urlGateway := sms.NewDialogURLGateway(cfg.SMS.ESMSQK, cfg.SMS.Mask, driverAppHash, passengerAppHash)
-			smsGateway = urlGateway
-		} else {
-			logger.Info("Using Dialog API v2 method (POST with authentication)")
-			apiGateway := sms.NewDialogGateway(sms.DialogConfig{
-				APIURL:           cfg.SMS.APIURL,
-				Username:         cfg.SMS.Username,
-				Password:         cfg.SMS.Password,
-				Mask:             cfg.SMS.Mask,
-				DriverAppHash:    driverAppHash,
-				PassengerAppHash: passengerAppHash,
-			})
-			smsGateway = apiGateway
-		}
+		logger.Info("Using Dialog API v2 method (POST with authentication)")
+		apiGateway := sms.NewDialogGateway(sms.DialogConfig{
+			APIURL:           cfg.SMS.APIURL,
+			Username:         cfg.SMS.Username,
+			Password:         cfg.SMS.Password,
+			Mask:             cfg.SMS.Mask,
+			DriverAppHash:    driverAppHash,
+			PassengerAppHash: passengerAppHash,
+		})
+		smsGateway = apiGateway
 
 		logger.Info("Dialog SMS Gateway initialized")
 	} else {

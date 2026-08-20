@@ -17,8 +17,8 @@ type Lounge struct {
 	Description sql.NullString `db:"description" json:"description,omitempty"`
 
 	// Location
-	Address    string     `db:"address" json:"address"`
-	District   *uuid.UUID `db:"district" json:"district,omitempty"`
+	Address    string         `db:"address" json:"address"`
+	District   *uuid.UUID     `db:"district" json:"district,omitempty"`
 	State      sql.NullString `db:"state" json:"state,omitempty"`
 	Country    sql.NullString `db:"country" json:"country,omitempty"`
 	PostalCode sql.NullString `db:"postal_code" json:"postal_code,omitempty"`

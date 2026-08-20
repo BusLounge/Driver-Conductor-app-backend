@@ -44,7 +44,7 @@ type AddLoungeRequest struct {
 	LoungeName    string   `json:"lounge_name" binding:"required"`
 	Description   *string  `json:"description"`
 	Address       string   `json:"address" binding:"required"`
-	District      *string  `json:"district"`                     // District UUID from districts table
+	District      *string  `json:"district"` // District UUID from districts table
 	State         *string  `json:"state"`
 	PostalCode    *string  `json:"postal_code"`
 	ContactPhone  string   `json:"contact_phone" binding:"required"`
@@ -837,12 +837,12 @@ func (h *LoungeHandler) GetAllActiveLounges(c *gin.Context) {
 	c.Header("Content-Type", "application/json")
 	c.Header("X-Content-Type-Options", "nosniff")
 	c.Header("Vary", "Accept-Encoding") // Cache separate versions for gzip/deflate
-	
+
 	c.JSON(http.StatusOK, gin.H{
-		"lounges": response,
-		"total":   total,
-		"limit":   limit,
-		"offset":  offset,
+		"lounges":  response,
+		"total":    total,
+		"limit":    limit,
+		"offset":   offset,
 		"has_more": offset+limit < int(total),
 	})
 }

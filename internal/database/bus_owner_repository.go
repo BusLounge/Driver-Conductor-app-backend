@@ -21,10 +21,10 @@ func NewBusOwnerRepository(db DB) *BusOwnerRepository {
 // CreateWithCompany creates a new bus owner record with company information
 func (r *BusOwnerRepository) CreateWithCompany(userID, companyName, identityNo string, businessEmail *string) (*models.BusOwner, error) {
 	owner := &models.BusOwner{
-		ID:                        uuid.New().String(),
-		UserID:                    userID,
-		VerificationStatus:        "pending",
-		ProfileCompleted:          false,
+		ID:                 uuid.New().String(),
+		UserID:             userID,
+		VerificationStatus: "pending",
+		ProfileCompleted:   false,
 	}
 
 	// Set company info

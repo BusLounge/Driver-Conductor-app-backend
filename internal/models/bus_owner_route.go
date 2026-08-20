@@ -9,14 +9,14 @@ import (
 
 // BusOwnerRoute represents a custom route configuration created by bus owner
 type BusOwnerRoute struct {
-	ID               string         `json:"id" db:"id"`
-	BusOwnerID       string         `json:"bus_owner_id" db:"bus_owner_id"`
-	MasterRouteID    string         `json:"master_route_id" db:"master_route_id"`
-	CustomRouteName  string         `json:"custom_route_name" db:"custom_route_name"`
-	Direction        string         `json:"direction" db:"direction"` // 'UP' or 'DOWN'
-	SelectedStopIDs  pq.StringArray `json:"selected_stop_ids" db:"selected_stop_ids"`
-	CreatedAt        time.Time      `json:"created_at" db:"created_at"`
-	UpdatedAt        time.Time      `json:"updated_at" db:"updated_at"`
+	ID              string         `json:"id" db:"id"`
+	BusOwnerID      string         `json:"bus_owner_id" db:"bus_owner_id"`
+	MasterRouteID   string         `json:"master_route_id" db:"master_route_id"`
+	CustomRouteName string         `json:"custom_route_name" db:"custom_route_name"`
+	Direction       string         `json:"direction" db:"direction"` // 'UP' or 'DOWN'
+	SelectedStopIDs pq.StringArray `json:"selected_stop_ids" db:"selected_stop_ids"`
+	CreatedAt       time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt       time.Time      `json:"updated_at" db:"updated_at"`
 }
 
 // CreateBusOwnerRouteRequest represents the request to create a custom route

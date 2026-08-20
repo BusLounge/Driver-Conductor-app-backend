@@ -92,8 +92,8 @@ func (s *BusSeatLayoutService) generateSeatsFromMap(seatMap [][]bool) []models.B
 			seat := models.BusSeatLayoutSeat{
 				RowNumber:    rowNumber,
 				RowLabel:     rowLabel,
-				Position:     pos + 1, // Convert 0-indexed to 1-indexed
-				IsWindowSeat: seatCounter == 1 || seatCounter == totalSeatsInRow, // First or last seat
+				Position:     pos + 1,                                               // Convert 0-indexed to 1-indexed
+				IsWindowSeat: seatCounter == 1 || seatCounter == totalSeatsInRow,    // First or last seat
 				IsAisleSeat:  (isLeftSide && pos == 2) || (!isLeftSide && pos == 3), // Aisle positions
 			}
 			seat.SeatNumber = s.generateSeatNumber(rowLabel, totalSeatsInRow, seatCounter)

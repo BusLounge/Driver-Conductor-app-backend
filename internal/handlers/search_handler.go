@@ -53,8 +53,8 @@ func (h *SearchHandler) SearchTrips(c *gin.Context) {
 	// Parse request body (let Gin handle body reading internally)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.WithFields(logrus.Fields{
-			"error":        err.Error(),
-			"error_type":   fmt.Sprintf("%T", err),
+			"error":      err.Error(),
+			"error_type": fmt.Sprintf("%T", err),
 		}).Warn("Invalid search request - JSON parsing failed")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -111,9 +111,9 @@ func (h *SearchHandler) SearchTrips(c *gin.Context) {
 
 	// Log successful response
 	h.logger.WithFields(logrus.Fields{
-		"results_count": len(response.Results),
+		"results_count":  len(response.Results),
 		"search_time_ms": response.SearchTimeMs,
-		"status": response.Status,
+		"status":         response.Status,
 	}).Info("Search completed successfully")
 
 	h.logger.Info("=== SEARCH REQUEST COMPLETED ===")

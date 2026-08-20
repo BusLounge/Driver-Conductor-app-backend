@@ -43,7 +43,6 @@ type AddLoungeTransportLocationRequest struct {
 	EstDuration int `json:"est_duration" binding:"required"`
 	// NEW additin
 	Distance float64 `json:"distance" binding:"required"`
-
 }
 
 type UpdateLoungeTransportLocationRequest struct {
@@ -111,10 +110,10 @@ func (h *LoungeTransportLocationHandler) AddLoungeTransportLocation(c *gin.Conte
 	// converting the data into the feeding model
 	TransportLocation := &models.LoungeTransportLocation{
 
-		LoungeID:  req.LoungeID,
-		Location:  req.Location,
-		Latitude:  req.Latitude,
-		Longitude: req.Longitude,
+		LoungeID:    req.LoungeID,
+		Location:    req.Location,
+		Latitude:    req.Latitude,
+		Longitude:   req.Longitude,
 		EstDuration: req.EstDuration,
 		// NEW addition
 		Distance: req.Distance,

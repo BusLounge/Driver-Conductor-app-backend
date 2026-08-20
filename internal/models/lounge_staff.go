@@ -10,7 +10,6 @@ import (
 //(REMOVED OMITEMPTY FROM => FullName, NIC, Email | BECAUSE WE ARE GETTING THIS INFO EXACTLY FROM THE LOUNGE_STAFF MEMBER AT FIRST TIME HE/SHE REGISTERS)
 // LoungeStaff represents a staff member assigned to a lounge
 type LoungeStaff struct {
-
 	ID       uuid.UUID `db:"id" json:"id"`
 	LoungeID uuid.UUID `db:"lounge_id" json:"lounge_id"`
 	UserID   uuid.UUID `db:"user_id" json:"user_id"` // FK to users table
@@ -24,7 +23,7 @@ type LoungeStaff struct {
 	ProfileCompleted bool `db:"profile_completed" json:"profile_completed"`
 
 	//NEW ADDITION => approvement status (owner approve by his app)
-	// changing to approval_status 
+	// changing to approval_status
 	//ApprovementStatus LoungeStaffApproveStatus `db:"approvement_status" json:"approvement_status"`
 	ApprovalStatus LoungeStaffApproveStatus `db:"approval_status" json:"approval_status"` // approved, declined, pending
 	// Employment Info
@@ -45,18 +44,15 @@ const (
 	LoungeStaffEmploymentActive     LoungeStaffEmploymentStatus = "active"
 	LoungeStaffEmploymentTerminated LoungeStaffEmploymentStatus = "terminated"
 	LoungeStaffEmploymentSuspended  LoungeStaffEmploymentStatus = "suspended"
-	// I am adding another status as pending for the initial filling of data 
-	LoungeStaffEmployementPending   LoungeStaffEmploymentStatus = "pending"
-	
+	// I am adding another status as pending for the initial filling of data
+	LoungeStaffEmployementPending LoungeStaffEmploymentStatus = "pending"
 )
 
 // NEW ADDITION => ENUM (Because now owner does not adding staff they are not invited by owner)
-type LoungeStaffApproveStatus string 
+type LoungeStaffApproveStatus string
 
 const (
-
 	LoungeStaffApproveStatusApproved LoungeStaffApproveStatus = "approved"
 	LoungeStaffApproveStatusDeclined LoungeStaffApproveStatus = "declined"
-	LoungeStaffApproveStatusPending  LoungeStaffApproveStatus  = "pending"
-
+	LoungeStaffApproveStatusPending  LoungeStaffApproveStatus = "pending"
 )

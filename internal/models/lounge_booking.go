@@ -280,12 +280,12 @@ type LoungeBooking struct {
 	UpdatedAt          time.Time      `db:"updated_at" json:"updated_at"`
 
 	// Populated via JOINs (not in DB table itself)
-	Guests    []LoungeBookingGuest    `db:"-" json:"guests,omitempty"`
-	PreOrders []LoungeBookingPreOrder `db:"-" json:"pre_orders,omitempty"`
-	HasTransport bool                 `db:"has_transport" json:"has_transport"`
-	VehicleType  string               `db:"vehicle_type" json:"vehicle_type,omitempty"`
-	PickupLocationName string         `db:"pickup_location_name" json:"pickup_location_name,omitempty"`
-	DriverAssignmentStatus string     `db:"driver_assignment_status" json:"driver_assignment_status,omitempty"`
+	Guests                 []LoungeBookingGuest    `db:"-" json:"guests,omitempty"`
+	PreOrders              []LoungeBookingPreOrder `db:"-" json:"pre_orders,omitempty"`
+	HasTransport           bool                    `db:"has_transport" json:"has_transport"`
+	VehicleType            string                  `db:"vehicle_type" json:"vehicle_type,omitempty"`
+	PickupLocationName     string                  `db:"pickup_location_name" json:"pickup_location_name,omitempty"`
+	DriverAssignmentStatus string                  `db:"driver_assignment_status" json:"driver_assignment_status,omitempty"`
 }
 
 // MarshalJSON customizes JSON encoding for LoungeBooking
@@ -581,24 +581,24 @@ type LoungeBookingResponse struct {
 
 // LoungeBookingListItem is a summary for listing bookings
 type LoungeBookingListItem struct {
-	ID                uuid.UUID           `json:"id" db:"id"`
-	BookingReference  string              `json:"booking_reference" db:"booking_reference"`
-	LoungeID          uuid.UUID           `json:"lounge_id" db:"lounge_id"`
-	LoungeName        string              `json:"lounge_name" db:"lounge_name"`
-	BookingType       LoungeBookingType   `json:"booking_type" db:"booking_type"`
-	ScheduledArrival  time.Time           `json:"scheduled_arrival" db:"scheduled_arrival"`
-	NumberOfGuests    int                 `json:"number_of_guests" db:"number_of_guests"`
-	PrimaryGuestName  string              `json:"primary_guest_name" db:"primary_guest_name"`
-	PrimaryGuestPhone string              `json:"primary_guest_phone" db:"primary_guest_phone"`
-	TotalAmount       string              `json:"total_amount" db:"total_amount"`
-	Status            LoungeBookingStatus `json:"status" db:"status"`
-	PaymentStatus     LoungePaymentStatus `json:"payment_status" db:"payment_status"`
-	CreatedAt         time.Time           `json:"created_at" db:"created_at"`
-	MasterBookingID   *uuid.UUID          `json:"master_booking_id,omitempty" db:"master_booking_id"`
-	HasTransport      bool                `json:"has_transport" db:"has_transport"`
-	VehicleType        string               `json:"vehicle_type,omitempty" db:"vehicle_type"`
-	PickupLocationName string               `json:"pickup_location_name,omitempty" db:"pickup_location_name"`
-	DriverAssignmentStatus string           `json:"driver_assignment_status" db:"driver_assignment_status"`
+	ID                     uuid.UUID           `json:"id" db:"id"`
+	BookingReference       string              `json:"booking_reference" db:"booking_reference"`
+	LoungeID               uuid.UUID           `json:"lounge_id" db:"lounge_id"`
+	LoungeName             string              `json:"lounge_name" db:"lounge_name"`
+	BookingType            LoungeBookingType   `json:"booking_type" db:"booking_type"`
+	ScheduledArrival       time.Time           `json:"scheduled_arrival" db:"scheduled_arrival"`
+	NumberOfGuests         int                 `json:"number_of_guests" db:"number_of_guests"`
+	PrimaryGuestName       string              `json:"primary_guest_name" db:"primary_guest_name"`
+	PrimaryGuestPhone      string              `json:"primary_guest_phone" db:"primary_guest_phone"`
+	TotalAmount            string              `json:"total_amount" db:"total_amount"`
+	Status                 LoungeBookingStatus `json:"status" db:"status"`
+	PaymentStatus          LoungePaymentStatus `json:"payment_status" db:"payment_status"`
+	CreatedAt              time.Time           `json:"created_at" db:"created_at"`
+	MasterBookingID        *uuid.UUID          `json:"master_booking_id,omitempty" db:"master_booking_id"`
+	HasTransport           bool                `json:"has_transport" db:"has_transport"`
+	VehicleType            string              `json:"vehicle_type,omitempty" db:"vehicle_type"`
+	PickupLocationName     string              `json:"pickup_location_name,omitempty" db:"pickup_location_name"`
+	DriverAssignmentStatus string              `json:"driver_assignment_status" db:"driver_assignment_status"`
 }
 
 // LoungeBookingWithOrders combines booking summary and all in-lounge orders

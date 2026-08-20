@@ -9,8 +9,8 @@ import (
 
 // LoungeOwner represents a lounge owner in the system
 type LoungeOwner struct {
-	ID     uuid.UUID `db:"id" json:"id"`
-	UserID uuid.UUID `db:"user_id" json:"user_id"`
+	ID     uuid.UUID      `db:"id" json:"id"`
+	UserID uuid.UUID      `db:"user_id" json:"user_id"`
 	Email  sql.NullString `db:"email" json:"email,omitempty"` //added newly (to send data to frontend without errors)
 
 	// Business Information

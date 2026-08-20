@@ -113,7 +113,7 @@ func (r *UserRepository) CreateUserWithRole(phone string, role string) (*models.
 		"conductor":    true,
 		"bus_owner":    true,
 		"lounge_owner": true,
-		"lounge_staff": true,//new addition 
+		"lounge_staff": true, //new addition
 		"admin":        true,
 	}
 
@@ -548,14 +548,14 @@ func (r *UserRepository) CountUsers() (int, error) {
 
 // add users with there full data into the user table (this makes it easy to search for users )
 func (r *UserRepository) CreateUserWithFullData(
-	phone string, 
+	phone string,
 	role string,
 	name string,
 	nic string,
 	email string,
-)(*models.User, error){
-	
-	// valid roles 
+) (*models.User, error) {
+
+	// valid roles
 	validRoles := map[string]bool{
 		"passenger":    true,
 		"driver":       true,
@@ -569,31 +569,31 @@ func (r *UserRepository) CreateUserWithFullData(
 	if !validRoles[role] {
 		return nil, fmt.Errorf("invalid role: %s", role)
 	}
-	 // Determine if email should be NULL or a valid value
-    emailValid := email != ""
+	// Determine if email should be NULL or a valid value
+	emailValid := email != ""
 
-	user :=&models.User{
-		ID:		     uuid.New(),
-		Phone:       phone,
-		FirstName:    models.NullString{
+	user := &models.User{
+		ID:    uuid.New(),
+		Phone: phone,
+		FirstName: models.NullString{
 			NullString: sql.NullString{
 				String: name,
-				Valid: true,
+				Valid:  true,
 			},
 		},
 		NIC: models.NullString{
 			NullString: sql.NullString{
 				String: nic,
-				Valid: true,
+				Valid:  true,
 			},
 		},
-		Email:models.NullString{
+		Email: models.NullString{
 			NullString: sql.NullString{
 				String: email,
-				Valid: emailValid,  // Only mark as valid if email is not empty
+				Valid:  emailValid, // Only mark as valid if email is not empty
 			},
 		},
-		Roles:       []string{role},
+		Roles:            []string{role},
 		Status:           "active",
 		ProfileCompleted: false,
 		PhoneVerified:    true, // Verified via OTP
@@ -608,7 +608,7 @@ func (r *UserRepository) CreateUserWithFullData(
 			created_at, updated_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
-	_,err := r.db.Exec(
+	_, err := r.db.Exec(
 		query,
 		user.ID,
 		user.Phone,
@@ -626,7 +626,6 @@ func (r *UserRepository) CreateUserWithFullData(
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user with full data: %w", err)
 	}
-
 
 	return user, nil
 }

@@ -14,11 +14,11 @@ import (
 
 // AdminAuthService handles admin authentication business logic
 type AdminAuthService struct {
-	adminRepo            *database.AdminUserRepository
+	adminRepo             *database.AdminUserRepository
 	adminRefreshTokenRepo *database.AdminRefreshTokenRepository
-	jwtService           *jwt.Service
-	accessTokenDuration  time.Duration
-	refreshTokenDuration time.Duration
+	jwtService            *jwt.Service
+	accessTokenDuration   time.Duration
+	refreshTokenDuration  time.Duration
 }
 
 // NewAdminAuthService creates a new admin auth service
@@ -30,11 +30,11 @@ func NewAdminAuthService(
 	refreshTokenDuration time.Duration,
 ) *AdminAuthService {
 	return &AdminAuthService{
-		adminRepo:            adminRepo,
+		adminRepo:             adminRepo,
 		adminRefreshTokenRepo: adminRefreshTokenRepo,
-		jwtService:           jwtService,
-		accessTokenDuration:  accessTokenDuration,
-		refreshTokenDuration: refreshTokenDuration,
+		jwtService:            jwtService,
+		accessTokenDuration:   accessTokenDuration,
+		refreshTokenDuration:  refreshTokenDuration,
 	}
 }
 

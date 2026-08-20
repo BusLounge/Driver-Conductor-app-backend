@@ -440,7 +440,7 @@ func (r *LoungeOwnerRepository) GetStaffCount(ownerID uuid.UUID) (int, error) {
 }
 
 // get the approved lounge owners (for public display in the main parts when selecting the user roles )
-func (r *LoungeOwnerRepository) GetApprovedLoungeOwners()([]models.LoungeOwner,error){
+func (r *LoungeOwnerRepository) GetApprovedLoungeOwners() ([]models.LoungeOwner, error) {
 	var owners []models.LoungeOwner
 
 	// query := `
@@ -459,20 +459,19 @@ func (r *LoungeOwnerRepository) GetApprovedLoungeOwners()([]models.LoungeOwner,e
 			ORDER BY business_name ASC
 			`
 
-		err := r.db.Select(&owners, query)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get approved lounge owners: %w", err)
-		}
-
-		
-		return owners,nil
+	err := r.db.Select(&owners, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get approved lounge owners: %w", err)
 	}
 
-	// GetApprovedLoungeOwnersByDistrictID returns approved lounge owners for a given district UUID
-	func (r *LoungeOwnerRepository) GetApprovedLoungeOwnersByDistrictID(districtID uuid.UUID) ([]models.LoungeOwner, error) {
-		var owners []models.LoungeOwner
+	return owners, nil
+}
 
-		query := `
+// GetApprovedLoungeOwnersByDistrictID returns approved lounge owners for a given district UUID
+func (r *LoungeOwnerRepository) GetApprovedLoungeOwnersByDistrictID(districtID uuid.UUID) ([]models.LoungeOwner, error) {
+	var owners []models.LoungeOwner
+
+	query := `
 			SELECT id, user_id, business_name, business_license,
 			       manager_full_name, manager_nic_number, manager_email, email, district_id,
 			       registration_step, profile_completed, verification_status,
@@ -483,20 +482,20 @@ func (r *LoungeOwnerRepository) GetApprovedLoungeOwners()([]models.LoungeOwner,e
 			ORDER BY business_name ASC
 		`
 
-		err := r.db.Select(&owners, query, districtID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get approved lounge owners by district: %w", err)
-		}
-
-		return owners, nil
+	err := r.db.Select(&owners, query, districtID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get approved lounge owners by district: %w", err)
 	}
 
-	// get lounge owners by district, filtered by district
-	func (r *LoungeOwnerRepository) GetApprovedLoungeOwnersByDistrict()(map[string][]models.LoungeOwner,error){
+	return owners, nil
+}
 
-		var owners []models.LoungeOwner
+// get lounge owners by district, filtered by district
+func (r *LoungeOwnerRepository) GetApprovedLoungeOwnersByDistrict() (map[string][]models.LoungeOwner, error) {
 
-		query :=`
+	var owners []models.LoungeOwner
+
+	query := `
 			SELECT id, user_id, business_name, business_license,
 			       manager_full_name, manager_nic_number, manager_email, email, district_id,
 			       registration_step, profile_completed, verification_status,
@@ -506,24 +505,24 @@ func (r *LoungeOwnerRepository) GetApprovedLoungeOwners()([]models.LoungeOwner,e
 			ORDER BY district_id ASC, business_name ASC
 			`
 
-		err := r.db.Select(&owners, query)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get approved lounge owners: %w", err)
-		}
-
-		// Group owners by district
-		districtGroups := make(map[string][]models.LoungeOwner)
-		for _, owner := range owners {
-			// Extract district UUID string from pointer
-			district := "Other" // Default for owners without district
-			if owner.DistrictID != nil {
-				district = owner.DistrictID.String()
-			}
-			districtGroups[district] = append(districtGroups[district], owner)
-		}
-
-		return districtGroups, nil
+	err := r.db.Select(&owners, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get approved lounge owners: %w", err)
 	}
+
+	// Group owners by district
+	districtGroups := make(map[string][]models.LoungeOwner)
+	for _, owner := range owners {
+		// Extract district UUID string from pointer
+		district := "Other" // Default for owners without district
+		if owner.DistrictID != nil {
+			district = owner.DistrictID.String()
+		}
+		districtGroups[district] = append(districtGroups[district], owner)
+	}
+
+	return districtGroups, nil
+}
 
 // UpdateProfile updates lounge owner profile with optional fields
 func (r *LoungeOwnerRepository) UpdateProfile(

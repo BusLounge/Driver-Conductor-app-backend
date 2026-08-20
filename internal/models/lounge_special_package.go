@@ -53,17 +53,17 @@ type LoungeSpecialPackage struct {
 
 	// Extended fields (new schema)
 	// Note: meal/breakfast/lunch/snack/dinner columns use hyphens in the DB (e.g. "meal-status")
-	Pax                *int64           `db:"pax"                json:"pax,omitempty"`
-	TransportStatus    *bool            `db:"transport_status"   json:"transport_status,omitempty"`
-	TransportMode      *string          `db:"transport_mode"     json:"transport_mode,omitempty"`
-	MealStatus         *bool            `db:"meal-status"        json:"meal_status,omitempty"`
-	BreakfastStatus    *bool            `db:"breakfast-status"   json:"breakfast_status,omitempty"`
-	BreakfastType      json.RawMessage  `db:"breakfast-type"     json:"breakfast_type,omitempty"`
-	LunchStatus        *bool            `db:"lunch-status"       json:"lunch_status,omitempty"`
-	LunchType          json.RawMessage  `db:"lunch-type"         json:"lunch_type,omitempty"`
-	EveningSnackStatus *bool            `db:"evening-snack-status" json:"evening_snack_status,omitempty"`
-	EveningSnackType   json.RawMessage  `db:"evening-snack-type"   json:"evening_snack_type,omitempty"`
-	DinnerStatus       *bool            `db:"dinner-status"      json:"dinner_status,omitempty"`
-	DinnerType         json.RawMessage  `db:"dinner-type"        json:"dinner_type,omitempty"`
-	Places             json.RawMessage  `db:"places"             json:"places,omitempty"`
+	Pax                *int64          `db:"pax"                json:"pax,omitempty"`
+	TransportStatus    *bool           `db:"transport_status"   json:"transport_status,omitempty"`
+	TransportMode      *string         `db:"transport_mode"     json:"transport_mode,omitempty"`
+	MealStatus         *bool           `db:"meal-status"        json:"meal_status,omitempty"`
+	BreakfastStatus    *bool           `db:"breakfast-status"   json:"breakfast_status,omitempty"`
+	BreakfastType      json.RawMessage `db:"breakfast-type"     json:"breakfast_type,omitempty"`
+	LunchStatus        *bool           `db:"lunch-status"       json:"lunch_status,omitempty"`
+	LunchType          json.RawMessage `db:"lunch-type"         json:"lunch_type,omitempty"`
+	EveningSnackStatus *bool           `db:"evening-snack-status" json:"evening_snack_status,omitempty"`
+	EveningSnackType   json.RawMessage `db:"evening-snack-type"   json:"evening_snack_type,omitempty"`
+	DinnerStatus       *bool           `db:"dinner-status"      json:"dinner_status,omitempty"`
+	DinnerType         json.RawMessage `db:"dinner-type"        json:"dinner_type,omitempty"`
+	Places             json.RawMessage `db:"places"             json:"places,omitempty"`
 }

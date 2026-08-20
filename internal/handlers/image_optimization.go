@@ -76,4 +76,3 @@ func indexOf(s string, substr string) int {
 	}
 	return -1
 }
-

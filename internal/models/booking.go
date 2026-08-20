@@ -52,15 +52,15 @@ type Booking struct {
 
 // CreateBookingRequest represents the request to create a booking
 type CreateBookingRequest struct {
-	ScheduledTripID  string  `json:"scheduled_trip_id" binding:"required"`
-	NumberOfSeats    int     `json:"number_of_seats" binding:"required,min=1"`
-	BoardingStopID   *string `json:"boarding_stop_id,omitempty"`
-	AlightingStopID  *string `json:"alighting_stop_id,omitempty"`
-	PassengerName    *string `json:"passenger_name,omitempty"`
-	PassengerPhone   *string `json:"passenger_phone,omitempty"`
-	PassengerEmail   *string `json:"passenger_email,omitempty"`
-	SpecialRequests  *string `json:"special_requests,omitempty"`
-	PaymentMethod    *string `json:"payment_method,omitempty"`
+	ScheduledTripID string  `json:"scheduled_trip_id" binding:"required"`
+	NumberOfSeats   int     `json:"number_of_seats" binding:"required,min=1"`
+	BoardingStopID  *string `json:"boarding_stop_id,omitempty"`
+	AlightingStopID *string `json:"alighting_stop_id,omitempty"`
+	PassengerName   *string `json:"passenger_name,omitempty"`
+	PassengerPhone  *string `json:"passenger_phone,omitempty"`
+	PassengerEmail  *string `json:"passenger_email,omitempty"`
+	SpecialRequests *string `json:"special_requests,omitempty"`
+	PaymentMethod   *string `json:"payment_method,omitempty"`
 }
 
 // CancelBookingRequest represents the request to cancel a booking
