@@ -920,6 +920,7 @@ func (r *ScheduledTripRepository) GetAssignedTripsForStaff(staffID string, start
 		WHERE (st.assigned_driver_id = $1 OR st.assigned_conductor_id = $1)
 		  AND DATE(st.departure_datetime) BETWEEN $2 AND $3
 		  AND st.status NOT IN ('cancelled', 'completed')
+		  AND st.ever_published = true
 		ORDER BY st.departure_datetime ASC
 	`
 

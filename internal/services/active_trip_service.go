@@ -70,6 +70,11 @@ func (s *ActiveTripService) StartTrip(input *StartTripInput) (*StartTripResult, 
 		return nil, errors.New("trip cannot be started - current status: " + string(scheduledTrip.Status))
 	}
 
+	if !scheduledTrip.EverPublished {
+		log.Printf("[StartTrip] ERROR: Trip has not been published yet")
+		return nil, errors.New("cannot start an unpublished trip")
+	}
+
 	// Log assigned staff - check for nil before dereferencing
 	log.Printf("[StartTrip] AssignedDriverID is nil: %v", scheduledTrip.AssignedDriverID == nil)
 	log.Printf("[StartTrip] AssignedConductorID is nil: %v", scheduledTrip.AssignedConductorID == nil)
