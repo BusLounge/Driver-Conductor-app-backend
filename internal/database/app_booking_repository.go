@@ -501,6 +501,42 @@ func (r *AppBookingRepository) GetBusBookingByBookingID(bookingID string) (*mode
 	return busBooking, nil
 }
 
+// GetAllBusBookingsByBookingID retrieves all bus bookings for a master booking ID, ordered by departure time
+func (r *AppBookingRepository) GetAllBusBookingsByBookingID(bookingID string) ([]models.BusBooking, error) {
+	query := `
+		SELECT bb.id, bb.booking_id, bb.scheduled_trip_id,
+		       bb.boarding_stop_id, bb.alighting_stop_id,
+		       bb.number_of_seats, bb.fare_per_seat, bb.total_fare,
+		       bb.status, bb.checked_in_at, bb.checked_in_by_user_id,
+		       bb.boarded_at, bb.boarded_by_user_id, bb.completed_at,
+		       bb.cancelled_at, bb.cancellation_reason,
+		       bb.qr_code_data, bb.qr_generated_at, bb.special_requests,
+		       bb.created_at, bb.updated_at
+		FROM bus_bookings bb
+		JOIN scheduled_trips st ON bb.scheduled_trip_id = st.id
+		WHERE bb.booking_id = $1
+		ORDER BY st.departure_datetime ASC`
+
+	var bookings []models.BusBooking
+	err := r.db.Select(&bookings, query, bookingID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate denormalized data for each booking
+	for i := range bookings {
+		r.populateBusBookingDetails(&bookings[i])
+		
+		// Get seats
+		seats, err := r.GetSeatsByBusBookingID(bookings[i].ID)
+		if err == nil {
+			bookings[i].Seats = seats
+		}
+	}
+
+	return bookings, nil
+}
+
 // GetBusBookingByQRCode retrieves bus booking by QR code
 func (r *AppBookingRepository) GetBusBookingByQRCode(qrCode string) (*models.BusBooking, error) {
 	busBooking := &models.BusBooking{}

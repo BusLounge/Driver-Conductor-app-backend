@@ -393,7 +393,7 @@ func main() {
 		busOwnerRouteRepo,
 		logger,
 	)
-	staffBookingHandler := handlers.NewStaffBookingHandler(appBookingRepo)
+	staffBookingHandler := handlers.NewStaffBookingHandler(appBookingRepo, activeTripService)
 	logger.Info("✓ App booking system initialized")
 
 	// ============================================================================
