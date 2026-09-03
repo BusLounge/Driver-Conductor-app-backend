@@ -108,6 +108,8 @@ type StaffProfileUpdate struct {
 	ExperienceYears      *int    `json:"experience_years"`
 	EmergencyContact     *string `json:"emergency_contact"`
 	EmergencyContactName *string `json:"emergency_contact_name"`
+	LicenseFrontURL      *string `json:"license_front_url"`
+	LicenseBackURL       *string `json:"license_back_url"`
 }
 
 // CompleteStaffProfile represents complete profile with user, staff, and employment info

@@ -98,6 +98,10 @@ func (s *CloudinaryStorageService) UploadProfilePhoto(ctx context.Context, file 
 	return s.uploadImage(ctx, file, originalFilename, "profile-photos", userID, "avatar")
 }
 
+func (s *CloudinaryStorageService) UploadStaffLicenseImage(ctx context.Context, file multipart.File, originalFilename, userID, side string) (CloudinaryUploadResult, error) {
+	return s.uploadImage(ctx, file, originalFilename, "staff-license", userID, normalizeSegment(side, "front"))
+}
+
 func (s *CloudinaryStorageService) DeleteImageByURL(ctx context.Context, imageURL string) error {
 	publicID, err := extractPublicIDFromURL(imageURL)
 	if err != nil {

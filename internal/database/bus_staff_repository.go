@@ -454,3 +454,45 @@ func (r *BusStaffRepository) UpdateEmploymentFields(employmentID string, fields 
 	_, err := r.db.Exec(query, args...)
 	return err
 }
+
+// GetStaffWithLicenseExpiringOn retrieves all staff whose license expires on a specific date
+func (r *BusStaffRepository) GetStaffWithLicenseExpiringOn(targetDate time.Time) ([]*models.BusStaff, error) {
+	query := `
+		SELECT 
+			id, user_id, first_name, last_name, staff_type, license_number, 
+			license_expiry_date, experience_years,
+			emergency_contact, emergency_contact_name, 
+			profile_completed, is_verified, verification_status,
+			verification_notes, verified_at, verified_by, created_at, updated_at,
+			nic_front_url, nic_back_url, license_front_url, license_back_url
+		FROM bus_staff
+		WHERE license_expiry_date IS NOT NULL
+		AND DATE(license_expiry_date) = DATE($1)
+	`
+
+	rows, err := r.db.Query(query, targetDate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query staff with expiring licenses: %w", err)
+	}
+	defer rows.Close()
+
+	var staffList []*models.BusStaff
+	for rows.Next() {
+		staff := &models.BusStaff{}
+		err := rows.Scan(
+			&staff.ID, &staff.UserID, &staff.FirstName, &staff.LastName, &staff.StaffType,
+			&staff.LicenseNumber, &staff.LicenseExpiryDate,
+			&staff.ExperienceYears, &staff.EmergencyContact, &staff.EmergencyContactName,
+			&staff.ProfileCompleted, &staff.IsVerified, &staff.VerificationStatus,
+			&staff.VerificationNotes, &staff.VerifiedAt,
+			&staff.VerifiedBy, &staff.CreatedAt, &staff.UpdatedAt,
+			&staff.NICFrontURL, &staff.NICBackURL, &staff.LicenseFrontURL, &staff.LicenseBackURL,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan staff: %w", err)
+		}
+		staffList = append(staffList, staff)
+	}
+
+	return staffList, nil
+}

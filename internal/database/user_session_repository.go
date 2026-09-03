@@ -417,6 +417,14 @@ func (r *UserSessionRepository) GetActiveSessionsByUserID(userID uuid.UUID) ([]*
 
 	return sessions, nil
 }
+// GetActiveSessionsByUserIDString retrieves all active sessions for a user using string user ID
+func (r *UserSessionRepository) GetActiveSessionsByUserIDString(userID string) ([]*models.UserSession, error) {
+	parsedID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+	return r.GetActiveSessionsByUserID(parsedID)
+}
 
 // UpdateOneSignalPlayerID updates the OneSignal player ID for a session
 func (r *UserSessionRepository) UpdateOneSignalPlayerID(userID uuid.UUID, deviceID, playerID string) error {

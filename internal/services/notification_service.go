@@ -102,3 +102,79 @@ func (s *NotificationService) NotifyLoungeOwnerNewStaff(
 
 	return nil
 }
+
+// LicenseExpiryNotificationType defines the type of license expiry notification
+type LicenseExpiryNotificationType string
+
+const (
+	LicenseExpiryReminder30Days LicenseExpiryNotificationType = "reminder_30_days"
+	LicenseExpiryReminderFinal  LicenseExpiryNotificationType = "reminder_final"
+	LicenseExpired              LicenseExpiryNotificationType = "expired"
+)
+
+// SendLicenseExpiryNotification sends a push notification about license expiry to a staff member
+func (s *NotificationService) SendLicenseExpiryNotification(
+	userID string,
+	staffName string,
+	notificationType LicenseExpiryNotificationType,
+) error {
+	// 1. Get active sessions for the staff user (OneSignal player IDs)
+	sessions, err := s.userSessionRepo.GetActiveSessionsByUserIDString(userID)
+	if err != nil {
+		return fmt.Errorf("failed to get user sessions: %w", err)
+	}
+
+	if len(sessions) == 0 {
+		log.Printf("INFO: No active sessions found for staff user %s (license expiry notification)", userID)
+		return nil
+	}
+
+	// 2. Extract OneSignal player IDs
+	var playerIDs []string
+	for _, session := range sessions {
+		if session.OneSignalPlayerID.Valid && session.OneSignalPlayerID.String != "" {
+			playerIDs = append(playerIDs, session.OneSignalPlayerID.String)
+		}
+	}
+
+	if len(playerIDs) == 0 {
+		log.Printf("INFO: No OneSignal player IDs found for staff user %s", userID)
+		return nil
+	}
+
+	// 3. Prepare notification content based on type
+	var title, body string
+	switch notificationType {
+	case LicenseExpiryReminder30Days:
+		title = "License Renewal Reminder"
+		body = fmt.Sprintf("Hi %s, your driving license will expire in 30 days. Please renew your license and upload the updated document through the SmartTransit application to continue providing transport services.", staffName)
+	case LicenseExpiryReminderFinal:
+		title = "Important Notice"
+		body = fmt.Sprintf("Hi %s, your driving license will expire tomorrow. Please renew your license immediately to avoid service interruptions.", staffName)
+	case LicenseExpired:
+		title = "License Expired"
+		body = fmt.Sprintf("Hi %s, your driving license has expired. Please upload your renewed license for verification. You may not be assigned to new trips until your updated license has been approved.", staffName)
+	default:
+		return fmt.Errorf("unknown notification type: %s", notificationType)
+	}
+
+	// 4. Prepare data payload
+	data := map[string]interface{}{
+		"type":              "license_expiry",
+		"notification_type": string(notificationType),
+		"action":            "renew_license",
+		"redirect_to":       "profile_screen",
+	}
+
+	// 5. Send via OneSignal
+	resp, err := s.oneSignalService.SendToPlayers(playerIDs, title, body, data)
+	if err != nil {
+		log.Printf("ERROR: Failed to send license expiry notification to user %s: %v", userID, err)
+		return fmt.Errorf("failed to send license expiry notification: %w", err)
+	}
+
+	log.Printf("INFO: Sent license expiry notification (%s) to user %s - Recipients: %d, Notification ID: %s",
+		notificationType, userID, resp.Recipients, resp.ID)
+
+	return nil
+}

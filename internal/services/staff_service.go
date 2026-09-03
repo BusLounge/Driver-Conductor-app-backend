@@ -214,6 +214,14 @@ func (s *StaffService) UpdateStaffProfile(userID string, updates map[string]inte
 		fields["emergency_contact_name"] = emergName
 	}
 
+	if licenseFrontURL, ok := updates["license_front_url"].(string); ok {
+		fields["license_front_url"] = licenseFrontURL
+	}
+
+	if licenseBackURL, ok := updates["license_back_url"].(string); ok {
+		fields["license_back_url"] = licenseBackURL
+	}
+
 	if len(fields) == 0 {
 		return fmt.Errorf("no valid fields to update")
 	}

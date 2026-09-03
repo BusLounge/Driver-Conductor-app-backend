@@ -183,6 +183,59 @@ func (h *StorageHandler) UploadManagerNICImage(c *gin.Context) {
 	})
 }
 
+// UploadStaffLicenseImage handles uploading staff license images (front/back)
+func (h *StorageHandler) UploadStaffLicenseImage(c *gin.Context) {
+	if h.cloudinaryService == nil {
+		c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "storage_unavailable", Message: "Cloudinary storage is not configured"})
+		return
+	}
+
+	userCtx, exists := middleware.GetUserContext(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized", Message: "User context not found"})
+		return
+	}
+
+	userID := c.Param("user_id")
+	if userID != userCtx.UserID.String() {
+		c.JSON(http.StatusForbidden, ErrorResponse{Error: "forbidden", Message: "You can only upload license images for your own account"})
+		return
+	}
+
+	side := strings.TrimSpace(c.Param("side"))
+	if side != "front" && side != "back" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "validation_error", Message: "side must be 'front' or 'back'"})
+		return
+	}
+
+	fileHeader, err := c.FormFile("image")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "validation_error", Message: "image file is required"})
+		return
+	}
+	file, err := fileHeader.Open()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "upload_failed", Message: "failed to read uploaded file"})
+		return
+	}
+	defer closeMultipartFile(file)
+
+	result, err := h.cloudinaryService.UploadStaffLicenseImage(c.Request.Context(), file, fileHeader.Filename, userID, side)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "upload_failed", Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"url":       result.SecureURL,
+		"public_id": result.PublicID,
+		"asset_id":  result.AssetID,
+		"entity":    "staff_license",
+		"user_id":   userID,
+		"side":      side,
+	})
+}
+
 func (h *StorageHandler) DeleteImage(c *gin.Context) {
 	var req deleteImageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

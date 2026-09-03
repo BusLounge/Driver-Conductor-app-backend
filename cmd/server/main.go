@@ -440,6 +440,11 @@ func main() {
 	intentExpirationService.Start()
 	defer intentExpirationService.Stop()
 
+	// Start background job for license expiry notifications
+	licenseCronService := services.NewLicenseCronService(staffRepository, notificationService)
+	licenseCronService.Start()
+	defer licenseCronService.Stop()
+
 	// Initialize Gin router
 	router := gin.New()
 
@@ -716,6 +721,8 @@ func main() {
 			uploads.POST("/lounge-owner/:user_id/nic/:side", storageHandler.UploadManagerNICImage)
 			logger.Info("  ✅ POST /api/v1/uploads/lounge-special-packages/:lounge_id/image")
 			uploads.POST("/lounge-special-packages/:lounge_id/image", storageHandler.UploadSpecialPackageImage)
+			logger.Info("  ✅ POST /api/v1/uploads/staff/:user_id/license/:side")
+			uploads.POST("/staff/:user_id/license/:side", storageHandler.UploadStaffLicenseImage)
 			logger.Info("  ✅ POST /api/v1/uploads/image/delete")
 			uploads.POST("/image/delete", storageHandler.DeleteImage)
 		}
