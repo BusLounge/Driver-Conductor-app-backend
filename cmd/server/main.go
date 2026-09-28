@@ -99,6 +99,9 @@ func main() {
 	permitRepository := database.NewRoutePermitRepository(db)
 	busRepository := database.NewBusRepository(db)
 
+	// Initialize report issues repository (for staff issue reporting)
+	reportIssuesRepo := database.NewReportIssuesRepository(db)
+
 	// Initialize booking repository
 	bookingRepository := database.NewBookingRepository(db)
 
@@ -226,6 +229,9 @@ func main() {
 
 	// Initialize staff handler
 	staffHandler := handlers.NewStaffHandler(staffService, userRepository, staffRepository, scheduledTripRepo)
+
+	// Initialize staff reporting handler (for issue reporting from driver/conductor app)
+	staffReportingHandler := handlers.NewStaffReportingHandler(reportIssuesRepo)
 
 	// Initialize active trip service and handler (for Start Trip / End Trip / Location tracking)
 	logger.Info("🚌 Initializing Active Trip tracking system...")
@@ -622,6 +628,14 @@ func main() {
 				staffProtected.PUT("/trips/:id/passengers", activeTripHandler.UpdatePassengerCount)
 				staffProtected.GET("/trips/:id/bookings", staffBookingHandler.GetTripBookings)
 				logger.Info("✓ Active Trip routes registered")
+
+				// Staff Issue Reporting routes
+				logger.Info("📋 Registering Staff Reporting routes...")
+				staffProtected.POST("/reporting", staffReportingHandler.ReportIssue)
+				staffProtected.GET("/reporting/my-reports", staffReportingHandler.GetMyReports)
+				staffProtected.GET("/reporting/trip/:tripId", staffReportingHandler.GetReportsByTrip)
+				staffProtected.GET("/reporting/:id", staffReportingHandler.GetReportByID)
+				logger.Info("✓ Staff Reporting routes registered")
 			}
 		}
 
