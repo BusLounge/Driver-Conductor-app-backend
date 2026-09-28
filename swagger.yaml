@@ -2475,6 +2475,160 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/staff/reporting:
+    post:
+      summary: Submit a staff issue report
+      description: Submit an issue report during a scheduled or active trip
+      operationId: submitStaffReport
+      tags:
+      - Staff
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - issue_type
+              - description
+              properties:
+                issue_type:
+                  type: string
+                  example: flat_wheel
+                description:
+                  type: string
+                  example: Flat wheel on road
+                location_address:
+                  type: string
+                  example: 5VGQ+PPJ, Katunayake
+                scheduled_trip_id:
+                  type: string
+                  example: fda0441d-bbe2-4e85-9946-dc06e7cb9ae1
+                active_trip_id:
+                  type: string
+                latitude:
+                  type: number
+                  format: double
+                longitude:
+                  type: number
+                  format: double
+                image_url:
+                  type: string
+      responses:
+        '201':
+          description: Issue report submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Issue report submitted successfully
+                  report:
+                    type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/staff/reporting/my-reports:
+    get:
+      summary: Get reports submitted by current staff
+      description: Retrieve list of issue reports submitted by the authenticated staff member
+      operationId: getMyStaffReports
+      tags:
+      - Staff
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: List of reports retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/staff/reporting/trip/{tripId}:
+    get:
+      summary: Get reports for a specific trip
+      description: Retrieve list of issue reports for a scheduled or active trip
+      operationId: getTripReports
+      tags:
+      - Staff
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: tripId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of trip reports retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/staff/reporting/{id}:
+    get:
+      summary: Get issue report by ID
+      description: Retrieve details of an issue report by its ID
+      operationId: getStaffReportByID
+      tags:
+      - Staff
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Report retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  report:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/staff/my-trips:
     get:
       summary: Get assigned trips for staff member
