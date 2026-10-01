@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/smarttransit/sms-auth-backend/internal/database"
@@ -26,6 +28,47 @@ func NewStaffBookingHandler(bookingRepo *database.AppBookingRepository, activeTr
 // VerifyBookingRequest represents a request to verify a booking by QR
 type VerifyBookingRequest struct {
 	QRCode string `json:"qr_code" binding:"required"`
+}
+
+// extractQRIdentifiers parses a QR string which may be raw text, UUID, or JSON and returns candidate identifiers
+func extractQRIdentifiers(input string) []string {
+	var candidates []string
+	input = strings.TrimSpace(input)
+	if input == "" {
+		return candidates
+	}
+	candidates = append(candidates, input)
+
+	// If input is JSON, parse and extract fields
+	if strings.HasPrefix(input, "{") && strings.HasSuffix(input, "}") {
+		var data map[string]interface{}
+		if err := json.Unmarshal([]byte(input), &data); err == nil {
+			keys := []string{
+				"qrData", "qr_data", "qr_code", "qrCode", "qr",
+				"referenceNo", "reference_no", "booking_reference", "bookingReference", "reference", "ref",
+				"busBookingId", "bus_booking_id",
+				"bookingId", "booking_id", "id",
+			}
+			for _, k := range keys {
+				if val, ok := data[k]; ok {
+					if strVal, isStr := val.(string); isStr && strings.TrimSpace(strVal) != "" {
+						strVal = strings.TrimSpace(strVal)
+						found := false
+						for _, c := range candidates {
+							if c == strVal {
+								found = true
+								break
+							}
+						}
+						if !found {
+							candidates = append([]string{strVal}, candidates...)
+						}
+					}
+				}
+			}
+		}
+	}
+	return candidates
 }
 
 // VerifyBookingByQR verifies a booking by scanning QR code
@@ -60,65 +103,77 @@ func (h *StaffBookingHandler) VerifyBookingByQR(c *gin.Context) {
 	var masterBooking *models.MasterBooking
 	var allBusBookings []models.BusBooking
 
-	// First try to find by specific bus booking QR code (now searches bookings.qr_code_data)
-	bb, err := h.bookingRepo.GetBusBookingByQRCode(req.QRCode)
-	if err == nil {
-		busBooking = bb
-		// Fetch master booking for passenger details
-		masterBooking, _ = h.bookingRepo.GetBookingByID(bb.BookingID)
-		// Fetch all bus bookings for transit info
-		allBusBookings, _ = h.bookingRepo.GetAllBusBookingsByBookingID(bb.BookingID)
-	}
+	candidates := extractQRIdentifiers(req.QRCode)
 
-	// Fallback: try as Unified QR code / Master Booking Reference
-	if busBooking == nil {
-		mb, masterErr := h.bookingRepo.GetBookingByReference(req.QRCode)
+	// Search using candidate identifiers (handles raw QR, reference, UUID, or extracted JSON fields)
+	for _, candidate := range candidates {
+		// 1. Try finding bus booking directly by QR code / reference / UUID
+		bb, err := h.bookingRepo.GetBusBookingByQRCode(candidate)
+		if err == nil && bb != nil {
+			busBooking = bb
+			masterBooking, _ = h.bookingRepo.GetBookingByID(bb.BookingID)
+			allBusBookings, _ = h.bookingRepo.GetAllBusBookingsByBookingID(bb.BookingID)
+			break
+		}
+
+		// 2. Try finding master booking by reference / QR / UUID
+		mb, masterErr := h.bookingRepo.GetBookingByReference(candidate)
 		if masterErr == nil && mb != nil {
 			masterBooking = mb
 			fetchedBookings, fetchErr := h.bookingRepo.GetAllBusBookingsByBookingID(mb.ID)
 			if fetchErr == nil && len(fetchedBookings) > 0 {
 				allBusBookings = fetchedBookings
-				
-				// 1. Check if conductor has an active trip and match it
-				if h.activeTripService != nil {
-					userCtx, exists := middleware.GetUserContext(c)
-					if exists {
-						activeTrip, _ := h.activeTripService.GetMyActiveTrip(userCtx.UserID.String())
-						if activeTrip != nil {
-							for i := range allBusBookings {
-								if allBusBookings[i].ScheduledTripID == activeTrip.ScheduledTripID {
-									busBooking = &allBusBookings[i]
-									break
-								}
-							}
-						}
-					}
-				}
-				
-				// 2. Fallback: Find the first leg that isn't completed/boarded/checked_in
-				if busBooking == nil {
+				busBooking = &allBusBookings[0]
+				break
+			}
+		}
+	}
+
+	// Smart route matching across all bus bookings
+	if len(allBusBookings) > 0 {
+		// 1. Prioritize leg matching conductor's active trip
+		if h.activeTripService != nil {
+			userCtx, exists := middleware.GetUserContext(c)
+			if exists {
+				activeTrip, _ := h.activeTripService.GetMyActiveTrip(userCtx.UserID.String())
+				if activeTrip != nil {
 					for i := range allBusBookings {
-						status := allBusBookings[i].Status
-						if status != models.BusBookingCompleted && status != models.BusBookingCancelled && 
-						   status != models.BusBookingNoShow && status != models.BusBookingBoarded && 
-						   status != models.BusBookingCheckedIn {
+						if allBusBookings[i].ScheduledTripID == activeTrip.ScheduledTripID {
 							busBooking = &allBusBookings[i]
 							break
 						}
 					}
 				}
-				
-				// 3. If all legs are completed, just return the last leg (or first leg)
-				if busBooking == nil {
-					busBooking = &allBusBookings[len(allBusBookings)-1]
+			}
+		}
+
+		// 2. Fallback: Find the first leg that isn't completed/boarded/checked_in
+		if busBooking == nil {
+			for i := range allBusBookings {
+				status := allBusBookings[i].Status
+				if status != models.BusBookingCompleted && status != models.BusBookingCancelled && 
+				   status != models.BusBookingNoShow && status != models.BusBookingBoarded && 
+				   status != models.BusBookingCheckedIn {
+					busBooking = &allBusBookings[i]
+					break
 				}
 			}
+		}
+
+		// 3. Fallback: if all legs are completed, use first leg
+		if busBooking == nil {
+			busBooking = &allBusBookings[0]
 		}
 	}
 
 	if busBooking == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Booking not found or no valid legs available"})
 		return
+	}
+
+	// Ensure master booking is loaded
+	if masterBooking == nil {
+		masterBooking, _ = h.bookingRepo.GetBookingByID(busBooking.BookingID)
 	}
 
 	// Build response with master booking details

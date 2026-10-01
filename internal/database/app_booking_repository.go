@@ -125,7 +125,6 @@ func (r *AppBookingRepository) CreateBooking(
 	bookingQuery := `
 		INSERT INTO bookings (
 			booking_reference, user_id, booking_type,
-			bus_total, lounge_total, pre_order_total,
 			subtotal, discount_amount, tax_amount, total_amount,
 			promo_code, promo_discount_type, promo_discount_value,
 			payment_status, payment_method, booking_status,
@@ -133,12 +132,11 @@ func (r *AppBookingRepository) CreateBooking(
 			booking_source, device_info, notes
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-			$11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
+			$11, $12, $13, $14, $15, $16, $17, $18, $19
 		) RETURNING id, created_at, updated_at`
 
 	err = tx.QueryRowx(bookingQuery,
 		booking.BookingReference, booking.UserID, booking.BookingType,
-		booking.BusTotal, booking.LoungeTotal, booking.PreOrderTotal,
 		booking.Subtotal, booking.DiscountAmount, booking.TaxAmount, booking.TotalAmount,
 		booking.PromoCode, booking.PromoDiscountType, booking.PromoDiscountValue,
 		booking.PaymentStatus, booking.PaymentMethod, booking.BookingStatus,
@@ -253,17 +251,16 @@ func (r *AppBookingRepository) GetBookingByID(bookingID string) (*models.MasterB
 	booking := &models.MasterBooking{}
 	query := `
 		SELECT id, booking_reference, user_id, booking_type,
-		       bus_total, lounge_total, pre_order_total,
 		       subtotal, discount_amount, tax_amount, total_amount,
 		       promo_code, promo_discount_type, promo_discount_value,
 		       payment_status, payment_method, payment_reference, payment_gateway, paid_at,
 		       booking_status, passenger_name, passenger_phone, passenger_email,
 		       confirmed_at, cancelled_at, cancellation_reason, cancelled_by_user_id,
-		       completed_at, refund_amount, refund_reference, refunded_at,
-		       booking_source, device_info, notes,
+		       completed_at,
+		       booking_source, notes,
 		       qr_code_data, qr_generated_at,
 		       created_at, updated_at
-		FROM bookings WHERE id = $1`
+		FROM bookings WHERE id::text = $1`
 
 	err := r.db.Get(booking, query, bookingID)
 	if err != nil {
@@ -287,17 +284,16 @@ func (r *AppBookingRepository) GetBookingByReference(reference string) (*models.
 	booking := &models.MasterBooking{}
 	query := `
 		SELECT id, booking_reference, user_id, booking_type,
-		       bus_total, lounge_total, pre_order_total,
 		       subtotal, discount_amount, tax_amount, total_amount,
 		       promo_code, promo_discount_type, promo_discount_value,
 		       payment_status, payment_method, payment_reference, payment_gateway, paid_at,
 		       booking_status, passenger_name, passenger_phone, passenger_email,
 		       confirmed_at, cancelled_at, cancellation_reason, cancelled_by_user_id,
-		       completed_at, refund_amount, refund_reference, refunded_at,
-		       booking_source, device_info, notes,
+		       completed_at,
+		       booking_source, notes,
 		       qr_code_data, qr_generated_at,
 		       created_at, updated_at
-		FROM bookings WHERE booking_reference = $1`
+		FROM bookings WHERE booking_reference = $1 OR qr_code_data = $1 OR id::text = $1`
 
 	err := r.db.Get(booking, query, reference)
 	if err != nil {
@@ -564,7 +560,7 @@ func (r *AppBookingRepository) GetAllBusBookingsByBookingID(bookingID string) ([
 	return bookings, nil
 }
 
-// GetBusBookingByQRCode retrieves bus booking by QR code (QR is now in bookings table)
+// GetBusBookingByQRCode retrieves bus booking by QR code, reference, or ID (QR is now in bookings table)
 func (r *AppBookingRepository) GetBusBookingByQRCode(qrCode string) (*models.BusBooking, error) {
 	busBooking := &models.BusBooking{}
 	query := `
@@ -578,15 +574,17 @@ func (r *AppBookingRepository) GetBusBookingByQRCode(qrCode string) (*models.Bus
 		       bb.created_at, bb.updated_at
 		FROM bus_bookings bb
 		JOIN bookings b ON b.id = bb.booking_id
-		WHERE b.qr_code_data = $1`
+		WHERE b.qr_code_data = $1 OR b.booking_reference = $1 OR b.id::text = $1 OR bb.id::text = $1
+		ORDER BY bb.created_at ASC
+		LIMIT 1`
 
 	err := r.db.Get(busBooking, query, qrCode)
 	if err != nil {
 		return nil, err
 	}
 
-	// Set QR on the bus booking struct from the query parameter
-	busBooking.QRCodeData = &qrCode
+	// Populate QR from parent bookings table
+	r.populateBusBookingQR(busBooking)
 
 	// Get denormalized data via JOINs
 	r.populateBusBookingDetails(busBooking)

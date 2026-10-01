@@ -114,9 +114,9 @@ type MasterBooking struct {
 	BookingType      BookingType `json:"booking_type" db:"booking_type"`
 
 	// Totals
-	BusTotal       float64 `json:"bus_total" db:"bus_total"`
-	LoungeTotal    float64 `json:"lounge_total" db:"lounge_total"`
-	PreOrderTotal  float64 `json:"pre_order_total" db:"pre_order_total"`
+	BusTotal       float64 `json:"bus_total" db:"-"`
+	LoungeTotal    float64 `json:"lounge_total" db:"-"`
+	PreOrderTotal  float64 `json:"pre_order_total" db:"-"`
 	Subtotal       float64 `json:"subtotal" db:"subtotal"`
 	DiscountAmount float64 `json:"discount_amount" db:"discount_amount"`
 	TaxAmount      float64 `json:"tax_amount" db:"tax_amount"`
@@ -150,9 +150,9 @@ type MasterBooking struct {
 	CompletedAt        *time.Time `json:"completed_at,omitempty" db:"completed_at"`
 
 	// Refund
-	RefundAmount    float64    `json:"refund_amount" db:"refund_amount"`
-	RefundReference *string    `json:"refund_reference,omitempty" db:"refund_reference"`
-	RefundedAt      *time.Time `json:"refunded_at,omitempty" db:"refunded_at"`
+	RefundAmount    float64    `json:"refund_amount" db:"-"`
+	RefundReference *string    `json:"refund_reference,omitempty" db:"-"`
+	RefundedAt      *time.Time `json:"refunded_at,omitempty" db:"-"`
 
 	// Metadata
 	BookingSource BookingSource `json:"booking_source" db:"booking_source"`
