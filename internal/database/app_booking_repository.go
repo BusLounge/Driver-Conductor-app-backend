@@ -72,9 +72,9 @@ func (r *AppBookingRepository) GenerateBusBookingQR() (string, error) {
 		timestampStr := time.Now().Format("20060102150405")
 		qrData := fmt.Sprintf("QR-%s-%s", timestampStr, randomStr)
 
-		// Check if exists
+		// Check if exists (qr_code_data is now in bookings table)
 		var count int
-		err := r.db.Get(&count, `SELECT COUNT(*) FROM bus_bookings WHERE qr_code_data = $1`, qrData)
+		err := r.db.Get(&count, `SELECT COUNT(*) FROM bookings WHERE qr_code_data = $1`, qrData)
 		if err != nil {
 			return "", fmt.Errorf("failed to check QR uniqueness: %w", err)
 		}
@@ -149,32 +149,43 @@ func (r *AppBookingRepository) CreateBooking(
 		return nil, fmt.Errorf("failed to create booking: %w", err)
 	}
 
-	// 3. Generate QR code for bus booking (use Go function, not DB function)
+	// 3. Generate QR code for booking (use Go function, not DB function)
 	qrCode, err := r.GenerateBusBookingQR()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate QR code: %w", err)
 	}
-	busBooking.QRCodeData = &qrCode
+	// Store QR on master booking (bookings table now owns qr_code_data)
+	booking.QRCodeData = &qrCode
 	now := time.Now()
+	booking.QRGeneratedAt = &now
+	// Also set on busBooking struct for backward compatibility in response
+	busBooking.QRCodeData = &qrCode
 	busBooking.QRGeneratedAt = &now
 
-	// 4. Insert bus booking (normalized - no duplicate columns)
+	// Update master booking with QR code data
+	_, err = tx.Exec(`UPDATE bookings SET qr_code_data = $1, qr_generated_at = $2 WHERE id = $3`,
+		qrCode, now, booking.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store QR code in bookings: %w", err)
+	}
+
+	// 4. Insert bus booking (normalized - qr_code_data no longer in bus_bookings)
 	busBooking.BookingID = booking.ID
 	busBookingQuery := `
 		INSERT INTO bus_bookings (
 			booking_id, scheduled_trip_id,
 			boarding_stop_id, alighting_stop_id,
 			number_of_seats, fare_per_seat, total_fare,
-			status, qr_code_data, qr_generated_at, special_requests
+			status, special_requests
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+			$1, $2, $3, $4, $5, $6, $7, $8, $9
 		) RETURNING id, created_at, updated_at`
 
 	err = tx.QueryRowx(busBookingQuery,
 		busBooking.BookingID, busBooking.ScheduledTripID,
 		busBooking.BoardingStopID, busBooking.AlightingStopID,
 		busBooking.NumberOfSeats, busBooking.FarePerSeat, busBooking.TotalFare,
-		busBooking.Status, busBooking.QRCodeData, busBooking.QRGeneratedAt, busBooking.SpecialRequests,
+		busBooking.Status, busBooking.SpecialRequests,
 	).Scan(&busBooking.ID, &busBooking.CreatedAt, &busBooking.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bus booking: %w", err)
@@ -249,7 +260,9 @@ func (r *AppBookingRepository) GetBookingByID(bookingID string) (*models.MasterB
 		       booking_status, passenger_name, passenger_phone, passenger_email,
 		       confirmed_at, cancelled_at, cancellation_reason, cancelled_by_user_id,
 		       completed_at, refund_amount, refund_reference, refunded_at,
-		       booking_source, device_info, notes, created_at, updated_at
+		       booking_source, device_info, notes,
+		       qr_code_data, qr_generated_at,
+		       created_at, updated_at
 		FROM bookings WHERE id = $1`
 
 	err := r.db.Get(booking, query, bookingID)
@@ -260,6 +273,9 @@ func (r *AppBookingRepository) GetBookingByID(bookingID string) (*models.MasterB
 	// Get bus booking if exists
 	busBooking, err := r.GetBusBookingByBookingID(bookingID)
 	if err == nil {
+		// Propagate QR from master booking to bus booking for backward compatibility
+		busBooking.QRCodeData = booking.QRCodeData
+		busBooking.QRGeneratedAt = booking.QRGeneratedAt
 		booking.BusBooking = busBooking
 	}
 
@@ -278,7 +294,9 @@ func (r *AppBookingRepository) GetBookingByReference(reference string) (*models.
 		       booking_status, passenger_name, passenger_phone, passenger_email,
 		       confirmed_at, cancelled_at, cancellation_reason, cancelled_by_user_id,
 		       completed_at, refund_amount, refund_reference, refunded_at,
-		       booking_source, device_info, notes, created_at, updated_at
+		       booking_source, device_info, notes,
+		       qr_code_data, qr_generated_at,
+		       created_at, updated_at
 		FROM bookings WHERE booking_reference = $1`
 
 	err := r.db.Get(booking, query, reference)
@@ -289,6 +307,9 @@ func (r *AppBookingRepository) GetBookingByReference(reference string) (*models.
 	// Get bus booking if exists
 	busBooking, err := r.GetBusBookingByBookingID(booking.ID)
 	if err == nil {
+		// Propagate QR from master booking to bus booking for backward compatibility
+		busBooking.QRCodeData = booking.QRCodeData
+		busBooking.QRGeneratedAt = booking.QRGeneratedAt
 		booking.BusBooking = busBooking
 	}
 
@@ -305,7 +326,7 @@ func (r *AppBookingRepository) GetBookingsByUserID(userID string, limit, offset 
 			bor.custom_route_name as route_name, 
 			st.departure_datetime, 
 			bb.number_of_seats,
-			bb.status as bus_status, bb.qr_code_data
+			bb.status as bus_status, b.qr_code_data
 		FROM bookings b
 		LEFT JOIN bus_bookings bb ON bb.booking_id = b.id
 		LEFT JOIN scheduled_trips st ON st.id = bb.scheduled_trip_id
@@ -329,7 +350,7 @@ func (r *AppBookingRepository) GetUpcomingBookingsByUserID(userID string) ([]mod
 			bor.custom_route_name as route_name, 
 			st.departure_datetime, 
 			bb.number_of_seats,
-			bb.status as bus_status, bb.qr_code_data
+			bb.status as bus_status, b.qr_code_data
 		FROM bookings b
 		LEFT JOIN bus_bookings bb ON bb.booking_id = b.id
 		LEFT JOIN scheduled_trips st ON st.id = bb.scheduled_trip_id
@@ -447,7 +468,7 @@ func (r *AppBookingRepository) GetBusBookingByID(busBookingID string) (*models.B
 		       bb.status, bb.checked_in_at, bb.checked_in_by_user_id,
 		       bb.boarded_at, bb.boarded_by_user_id, bb.completed_at,
 		       bb.cancelled_at, bb.cancellation_reason,
-		       bb.qr_code_data, bb.qr_generated_at, bb.special_requests,
+		       bb.special_requests,
 		       bb.created_at, bb.updated_at
 		FROM bus_bookings bb
 		WHERE bb.id = $1`
@@ -456,6 +477,9 @@ func (r *AppBookingRepository) GetBusBookingByID(busBookingID string) (*models.B
 	if err != nil {
 		return nil, err
 	}
+
+	// Get QR from parent bookings table
+	r.populateBusBookingQR(busBooking)
 
 	// Get denormalized data via JOINs
 	r.populateBusBookingDetails(busBooking)
@@ -479,7 +503,7 @@ func (r *AppBookingRepository) GetBusBookingByBookingID(bookingID string) (*mode
 		       bb.status, bb.checked_in_at, bb.checked_in_by_user_id,
 		       bb.boarded_at, bb.boarded_by_user_id, bb.completed_at,
 		       bb.cancelled_at, bb.cancellation_reason,
-		       bb.qr_code_data, bb.qr_generated_at, bb.special_requests,
+		       bb.special_requests,
 		       bb.created_at, bb.updated_at
 		FROM bus_bookings bb
 		WHERE bb.booking_id = $1`
@@ -488,6 +512,9 @@ func (r *AppBookingRepository) GetBusBookingByBookingID(bookingID string) (*mode
 	if err != nil {
 		return nil, err
 	}
+
+	// Get QR from parent bookings table
+	r.populateBusBookingQR(busBooking)
 
 	// Get denormalized data via JOINs
 	r.populateBusBookingDetails(busBooking)
@@ -510,7 +537,7 @@ func (r *AppBookingRepository) GetAllBusBookingsByBookingID(bookingID string) ([
 		       bb.status, bb.checked_in_at, bb.checked_in_by_user_id,
 		       bb.boarded_at, bb.boarded_by_user_id, bb.completed_at,
 		       bb.cancelled_at, bb.cancellation_reason,
-		       bb.qr_code_data, bb.qr_generated_at, bb.special_requests,
+		       bb.special_requests,
 		       bb.created_at, bb.updated_at
 		FROM bus_bookings bb
 		JOIN scheduled_trips st ON bb.scheduled_trip_id = st.id
@@ -537,7 +564,7 @@ func (r *AppBookingRepository) GetAllBusBookingsByBookingID(bookingID string) ([
 	return bookings, nil
 }
 
-// GetBusBookingByQRCode retrieves bus booking by QR code
+// GetBusBookingByQRCode retrieves bus booking by QR code (QR is now in bookings table)
 func (r *AppBookingRepository) GetBusBookingByQRCode(qrCode string) (*models.BusBooking, error) {
 	busBooking := &models.BusBooking{}
 	query := `
@@ -547,15 +574,19 @@ func (r *AppBookingRepository) GetBusBookingByQRCode(qrCode string) (*models.Bus
 		       bb.status, bb.checked_in_at, bb.checked_in_by_user_id,
 		       bb.boarded_at, bb.boarded_by_user_id, bb.completed_at,
 		       bb.cancelled_at, bb.cancellation_reason,
-		       bb.qr_code_data, bb.qr_generated_at, bb.special_requests,
+		       bb.special_requests,
 		       bb.created_at, bb.updated_at
 		FROM bus_bookings bb
-		WHERE bb.qr_code_data = $1`
+		JOIN bookings b ON b.id = bb.booking_id
+		WHERE b.qr_code_data = $1`
 
 	err := r.db.Get(busBooking, query, qrCode)
 	if err != nil {
 		return nil, err
 	}
+
+	// Set QR on the bus booking struct from the query parameter
+	busBooking.QRCodeData = &qrCode
 
 	// Get denormalized data via JOINs
 	r.populateBusBookingDetails(busBooking)
@@ -578,7 +609,7 @@ func (r *AppBookingRepository) GetBusBookingsByTripID(tripID string) ([]models.B
 		       bb.status, bb.checked_in_at, bb.checked_in_by_user_id,
 		       bb.boarded_at, bb.boarded_by_user_id, bb.completed_at,
 		       bb.cancelled_at, bb.cancellation_reason,
-		       bb.qr_code_data, bb.qr_generated_at, bb.special_requests,
+		       bb.special_requests,
 		       bb.created_at, bb.updated_at
 		FROM bus_bookings bb
 		WHERE bb.scheduled_trip_id = $1 AND bb.status != 'cancelled'
@@ -636,6 +667,19 @@ func (r *AppBookingRepository) populateBusBookingDetails(bb *models.BusBooking) 
 		bb.BoardingStopName = details.BoardingStopName
 		bb.AlightingStopName = details.AlightingStopName
 		bb.DepartureDatetime = &details.DepartureDatetime
+	}
+}
+
+// populateBusBookingQR fetches QR code data from the parent bookings table
+func (r *AppBookingRepository) populateBusBookingQR(bb *models.BusBooking) {
+	var qrInfo struct {
+		QRCodeData    *string    `db:"qr_code_data"`
+		QRGeneratedAt *time.Time `db:"qr_generated_at"`
+	}
+	err := r.db.Get(&qrInfo, `SELECT qr_code_data, qr_generated_at FROM bookings WHERE id = $1`, bb.BookingID)
+	if err == nil {
+		bb.QRCodeData = qrInfo.QRCodeData
+		bb.QRGeneratedAt = qrInfo.QRGeneratedAt
 	}
 }
 

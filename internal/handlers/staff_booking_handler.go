@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -58,17 +57,27 @@ func (h *StaffBookingHandler) VerifyBookingByQR(c *gin.Context) {
 	}
 
 	var busBooking *models.BusBooking
+	var masterBooking *models.MasterBooking
+	var allBusBookings []models.BusBooking
 
-	// First try to find by specific bus booking QR code
+	// First try to find by specific bus booking QR code (now searches bookings.qr_code_data)
 	bb, err := h.bookingRepo.GetBusBookingByQRCode(req.QRCode)
 	if err == nil {
 		busBooking = bb
-	} else if err == sql.ErrNoRows {
-		// Fallback for Unified QR codes / Master Booking References
-		masterBooking, masterErr := h.bookingRepo.GetBookingByReference(req.QRCode)
-		if masterErr == nil && masterBooking != nil {
-			allBusBookings, fetchErr := h.bookingRepo.GetAllBusBookingsByBookingID(masterBooking.ID)
-			if fetchErr == nil && len(allBusBookings) > 0 {
+		// Fetch master booking for passenger details
+		masterBooking, _ = h.bookingRepo.GetBookingByID(bb.BookingID)
+		// Fetch all bus bookings for transit info
+		allBusBookings, _ = h.bookingRepo.GetAllBusBookingsByBookingID(bb.BookingID)
+	}
+
+	// Fallback: try as Unified QR code / Master Booking Reference
+	if busBooking == nil {
+		mb, masterErr := h.bookingRepo.GetBookingByReference(req.QRCode)
+		if masterErr == nil && mb != nil {
+			masterBooking = mb
+			fetchedBookings, fetchErr := h.bookingRepo.GetAllBusBookingsByBookingID(mb.ID)
+			if fetchErr == nil && len(fetchedBookings) > 0 {
+				allBusBookings = fetchedBookings
 				
 				// 1. Check if conductor has an active trip and match it
 				if h.activeTripService != nil {
@@ -112,7 +121,8 @@ func (h *StaffBookingHandler) VerifyBookingByQR(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	// Build response with master booking details
+	response := gin.H{
 		"valid":              true,
 		"bus_booking_id":     busBooking.ID,
 		"route_name":         busBooking.RouteName,
@@ -124,9 +134,40 @@ func (h *StaffBookingHandler) VerifyBookingByQR(c *gin.Context) {
 		"is_checked_in":      busBooking.CheckedInAt != nil,
 		"check_in_time":      busBooking.CheckedInAt,
 		"total_fare":         busBooking.TotalFare,
-		"payment_status":     "paid", // typically paid before receiving QR
 		"seats":              busBooking.Seats,
-	})
+	}
+
+	// Add master booking details if available
+	if masterBooking != nil {
+		response["passenger_name"] = masterBooking.PassengerName
+		response["booking_reference"] = masterBooking.BookingReference
+		response["payment_status"] = masterBooking.PaymentStatus
+	} else {
+		response["payment_status"] = "paid" // default assumption
+	}
+
+	// Add transit information (all legs) if there are multiple bus bookings
+	if len(allBusBookings) > 1 {
+		var transitLegs []gin.H
+		for _, leg := range allBusBookings {
+			transitLegs = append(transitLegs, gin.H{
+				"bus_booking_id":     leg.ID,
+				"route_name":         leg.RouteName,
+				"boarding_stop":      leg.BoardingStopName,
+				"alighting_stop":     leg.AlightingStopName,
+				"departure_datetime": leg.DepartureDatetime,
+				"status":             leg.Status,
+				"number_of_seats":    leg.NumberOfSeats,
+			})
+		}
+		response["is_transit"] = true
+		response["transit_legs"] = transitLegs
+		response["total_legs"] = len(allBusBookings)
+	} else {
+		response["is_transit"] = false
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // CheckInRequest represents a check-in request

@@ -159,6 +159,10 @@ type MasterBooking struct {
 	DeviceInfo    DeviceInfo    `json:"device_info,omitempty" db:"device_info"`
 	Notes         *string       `json:"notes,omitempty" db:"notes"`
 
+	// QR Code (now stored in bookings table, not bus_bookings)
+	QRCodeData    *string    `json:"qr_code_data,omitempty" db:"qr_code_data"`
+	QRGeneratedAt *time.Time `json:"qr_generated_at,omitempty" db:"qr_generated_at"`
+
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 
@@ -200,9 +204,9 @@ type BusBooking struct {
 	CancelledAt        *time.Time `json:"cancelled_at,omitempty" db:"cancelled_at"`
 	CancellationReason *string    `json:"cancellation_reason,omitempty" db:"cancellation_reason"`
 
-	// QR Code
-	QRCodeData    *string    `json:"qr_code_data,omitempty" db:"qr_code_data"`
-	QRGeneratedAt *time.Time `json:"qr_generated_at,omitempty" db:"qr_generated_at"`
+	// QR Code (populated from parent bookings table, no longer stored in bus_bookings)
+	QRCodeData    *string    `json:"qr_code_data,omitempty" db:"-"`
+	QRGeneratedAt *time.Time `json:"qr_generated_at,omitempty" db:"-"`
 
 	SpecialRequests *string `json:"special_requests,omitempty" db:"special_requests"`
 

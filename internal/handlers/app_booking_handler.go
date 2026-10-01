@@ -530,18 +530,29 @@ func (h *AppBookingHandler) GetBookingQR(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized"})
 		return
 	}
-
-	if booking.BusBooking == nil || booking.BusBooking.QRCodeData == nil {
+	// QR is now stored on master booking (bookings table)
+	var qrCode string
+	if booking.QRCodeData != nil {
+		qrCode = *booking.QRCodeData
+	} else if booking.BusBooking != nil && booking.BusBooking.QRCodeData != nil {
+		// Backward compatibility: check bus booking
+		qrCode = *booking.BusBooking.QRCodeData
+	} else {
 		c.JSON(http.StatusNotFound, gin.H{"error": "QR code not available"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"qr_code":            *booking.BusBooking.QRCodeData,
-		"booking_reference":  booking.BookingReference,
-		"passenger_name":     booking.PassengerName,
-		"route_name":         booking.BusBooking.RouteName,
-		"departure_datetime": booking.BusBooking.DepartureDatetime,
-		"seats":              len(booking.BusBooking.Seats),
-	})
+	response := gin.H{
+		"qr_code":           qrCode,
+		"booking_reference": booking.BookingReference,
+		"passenger_name":    booking.PassengerName,
+	}
+
+	if booking.BusBooking != nil {
+		response["route_name"] = booking.BusBooking.RouteName
+		response["departure_datetime"] = booking.BusBooking.DepartureDatetime
+		response["seats"] = len(booking.BusBooking.Seats)
+	}
+
+	c.JSON(http.StatusOK, response)
 }
