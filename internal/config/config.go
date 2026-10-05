@@ -39,6 +39,9 @@ type Config struct {
 	// Payment gateway configuration
 	Payment PaymentConfig
 
+	// PayHere configuration
+	PayHere PayHereConfig
+
 	// Cloudinary configuration
 	CloudinaryURL string
 
@@ -49,6 +52,14 @@ type Config struct {
 
 	// OneSignal REST API Key
 	OneSignalRestAPIKey string
+}
+
+// PayHereConfig holds PayHere credentials for payouts and transactions
+type PayHereConfig struct {
+	MerchantID     string
+	MerchantSecret string
+	Environment    string // "sandbox" or "production"
+	BaseURL        string // "https://sandbox.payhere.lk" or "https://www.payhere.lk"
 }
 
 // PaymentConfig holds PAYable IPG configuration
@@ -195,6 +206,12 @@ func Load() (*Config, error) {
 			LogoURL:       getEnv("PAYABLE_LOGO_URL", ""),
 			ReturnURL:     getEnv("PAYABLE_RETURN_URL", ""),
 			WebhookURL:    getEnv("PAYABLE_WEBHOOK_URL", ""),
+		},
+		PayHere: PayHereConfig{
+			MerchantID:     getEnv("PAYHERE_MERCHANT_ID", "1237200"),
+			MerchantSecret: getEnv("PAYHERE_MERCHANT_SECRET", "MjM2MzMzNjQzODMwMjI2MDgwMDIyMTE3OTEwNDA1NTU1ODkzMTg"),
+			Environment:    getEnv("PAYHERE_ENV", "sandbox"),
+			BaseURL:        getEnv("PAYHERE_BASE_URL", "https://sandbox.payhere.lk"),
 		},
 		CloudinaryURL:       getEnv("CLOUDINARY_URL", ""),
 		OneSignalAppID:      getEnv("ONESIGNAL_APP_ID", ""),

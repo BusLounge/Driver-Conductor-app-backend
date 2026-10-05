@@ -230,6 +230,12 @@ func main() {
 	// Initialize staff handler
 	staffHandler := handlers.NewStaffHandler(staffService, userRepository, staffRepository, scheduledTripRepo)
 
+	// Initialize staff wallet & payout handler (PayHere integration)
+	staffBankRepo := database.NewStaffBankRepository(sqlxDB.DB)
+	payhereService := services.NewPayHereService(cfg.PayHere, logger)
+	staffWalletHandler := handlers.NewStaffWalletHandler(staffBankRepo, staffRepository, payhereService, sqlxDB.DB, logger)
+	logger.Info("💳 Staff Wallet & PayHere Payout system initialized")
+
 	// Initialize staff reporting handler (for issue reporting from driver/conductor app)
 	staffReportingHandler := handlers.NewStaffReportingHandler(reportIssuesRepo)
 
@@ -636,6 +642,13 @@ func main() {
 				staffProtected.GET("/reporting/trip/:tripId", staffReportingHandler.GetReportsByTrip)
 				staffProtected.GET("/reporting/:id", staffReportingHandler.GetReportByID)
 				logger.Info("✓ Staff Reporting routes registered")
+
+				// Staff Bank Details & Wallet Payout routes (PayHere integration)
+				logger.Info("💳 Registering Staff Wallet & Payout routes...")
+				staffProtected.GET("/bank-details", staffWalletHandler.GetBankDetails)
+				staffProtected.POST("/bank-details", staffWalletHandler.SaveBankDetails)
+				staffProtected.POST("/wallet/payout", staffWalletHandler.RequestPayout)
+				logger.Info("✓ Staff Wallet & Payout routes registered")
 			}
 		}
 
