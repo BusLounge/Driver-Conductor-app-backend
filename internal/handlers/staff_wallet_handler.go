@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -175,25 +176,48 @@ func (h *StaffWalletHandler) RequestPayout(c *gin.Context) {
 		}
 	}
 
-	// 3. Check wallet balance
-	type WalletRecord struct {
-		ID      uuid.UUID `db:"id"`
-		Balance float64   `db:"balance"`
-		Status  string    `db:"status"`
-	}
-
-	var wallet WalletRecord
-	err := h.db.Get(&wallet, "SELECT id, balance, status FROM wallets_passenger WHERE user_id = $1 LIMIT 1", userCtx.UserID)
+	// 3. Check wallet and calculate staff available balance from settled transactions
+	var walletID uuid.UUID
+	err := h.db.Get(&walletID, "SELECT id FROM wallets_passenger WHERE user_id = $1 LIMIT 1", userCtx.UserID)
 	if err != nil {
-		h.logger.WithError(err).Error("Wallet not found for user")
-		c.JSON(http.StatusNotFound, ErrorResponse{Error: "wallet_not_found", Message: "Staff wallet not found"})
-		return
+		if err == sql.ErrNoRows {
+			walletID = uuid.New()
+			_, err = h.db.Exec(`
+				INSERT INTO wallets_passenger (id, user_id, balance, currency, status, created_at, updated_at)
+				VALUES ($1, $2, 0, 'LKR', 'ACTIVE', NOW(), NOW())
+				ON CONFLICT (user_id) DO NOTHING
+			`, walletID, userCtx.UserID)
+			_ = h.db.Get(&walletID, "SELECT id FROM wallets_passenger WHERE user_id = $1 LIMIT 1", userCtx.UserID)
+		} else {
+			h.logger.WithError(err).Error("Wallet not found for user")
+			c.JSON(http.StatusNotFound, ErrorResponse{Error: "wallet_not_found", Message: "Staff wallet not found"})
+			return
+		}
 	}
 
-	if wallet.Balance < req.Amount {
+	var availableBalance float64
+	err = h.db.Get(&availableBalance, `
+		SELECT COALESCE(SUM(
+			CASE 
+				WHEN transaction_type = 'credit' AND reference_type = 'settlement' AND status = 'completed' THEN amount
+				WHEN transaction_type = 'debit' AND reference_type = 'bank_payout' AND status IN ('completed', 'pending') THEN -amount
+				ELSE 0
+			END
+		), 0)
+		FROM wallet_transactions
+		WHERE wallet_id = $1
+	`, walletID)
+	if err != nil {
+		availableBalance = 0
+	}
+	if availableBalance < 0 {
+		availableBalance = 0
+	}
+
+	if availableBalance < req.Amount {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error:   "insufficient_balance",
-			Message: fmt.Sprintf("Insufficient wallet balance. Available: LKR %.2f, Requested: LKR %.2f", wallet.Balance, req.Amount),
+			Message: fmt.Sprintf("Insufficient wallet balance. Available: LKR %.2f, Requested: LKR %.2f", availableBalance, req.Amount),
 		})
 		return
 	}
@@ -206,25 +230,20 @@ func (h *StaffWalletHandler) RequestPayout(c *gin.Context) {
 	}
 	defer tx.Rollback()
 
-	newBalance := wallet.Balance - req.Amount
+	newBalance := availableBalance - req.Amount
 	now := time.Now()
 	txID := uuid.New()
 	payoutRef := fmt.Sprintf("PH-PO-%d-%s", now.Unix(), txID.String()[:8])
 	maskedAcc := maskAccountNumber(req.AccountNumber)
 	description := fmt.Sprintf("Bank Transfer to %s (%s)", req.BankName, maskedAcc)
 
-	// Update wallet balance
-	_, err = tx.Exec(
+	// Update base wallet balance to keep in sync
+	_, _ = tx.Exec(
 		"UPDATE wallets_passenger SET balance = $1, updated_at = NOW() WHERE id = $2",
-		newBalance, wallet.ID,
+		newBalance, walletID,
 	)
-	if err != nil {
-		h.logger.WithError(err).Error("Failed to update wallet balance")
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "database_error", Message: "Failed to deduct wallet balance"})
-		return
-	}
 
-	// Insert into wallet_transactions
+	// Insert debit into wallet_transactions
 	_, err = tx.Exec(`
 		INSERT INTO wallet_transactions (
 			id, wallet_id, amount, transaction_type, reference_type,
@@ -233,7 +252,7 @@ func (h *StaffWalletHandler) RequestPayout(c *gin.Context) {
 			$1, $2, $3, 'debit', 'bank_payout',
 			$4, $5, 'pending', $6, $7, NOW()
 		)
-	`, txID, wallet.ID, req.Amount, payoutRef, description, wallet.Balance, newBalance)
+	`, txID, walletID, req.Amount, payoutRef, description, availableBalance, newBalance)
 	if err != nil {
 		h.logger.WithError(err).Error("Failed to insert wallet transaction")
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "database_error", Message: "Failed to record payout transaction"})

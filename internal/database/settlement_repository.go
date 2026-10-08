@@ -23,30 +23,58 @@ func NewSettlementRepository(db *sqlx.DB) *SettlementRepository {
 
 // GetWalletStatus retrieves the wallet balance and payout tracker status for a user
 func (r *SettlementRepository) GetWalletStatus(ctx context.Context, userID uuid.UUID, payeeType string) (*models.WalletStatusResponse, error) {
-	// 1. Fetch wallet balance from wallets_passenger
-	var balance float64
-	err := r.db.GetContext(ctx, &balance, "SELECT COALESCE(balance, 0) FROM wallets_passenger WHERE user_id = $1 LIMIT 1", userID)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, err
-	}
-
-	// 2. Fetch total pending amount from settlements table
-	var pendingAmount float64
-	err = r.db.GetContext(ctx, &pendingAmount, `
-		SELECT COALESCE(SUM(net_amount), 0)
-		FROM settlements
-		WHERE payee_user_id = $1 AND status = 'pending' AND is_paid = false
-	`, userID)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, err
-	}
-
 	// Normalize payeeType
 	if payeeType == "" {
 		payeeType = "driver"
 	}
 
-	// 3. Fetch payout tracker record
+	// 1. Ensure wallet record exists in wallets_passenger to link wallet_transactions
+	var walletID uuid.UUID
+	err := r.db.GetContext(ctx, &walletID, "SELECT id FROM wallets_passenger WHERE user_id = $1 LIMIT 1", userID)
+	if err == sql.ErrNoRows {
+		walletID = uuid.New()
+		_, _ = r.db.ExecContext(ctx, `
+			INSERT INTO wallets_passenger (id, user_id, balance, currency, status, created_at, updated_at)
+			VALUES ($1, $2, 0, 'LKR', 'ACTIVE', NOW(), NOW())
+			ON CONFLICT (user_id) DO NOTHING
+		`, walletID, userID)
+		_ = r.db.GetContext(ctx, &walletID, "SELECT id FROM wallets_passenger WHERE user_id = $1 LIMIT 1", userID)
+	} else if err != nil {
+		return nil, err
+	}
+
+	// 2. Derive conductor/driver available balance strictly from settled credits minus bank debits
+	var balance float64
+	err = r.db.GetContext(ctx, &balance, `
+		SELECT COALESCE(SUM(
+			CASE 
+				WHEN transaction_type = 'credit' AND reference_type = 'settlement' AND status = 'completed' THEN amount
+				WHEN transaction_type = 'debit' AND reference_type = 'bank_payout' AND status IN ('completed', 'pending') THEN -amount
+				ELSE 0
+			END
+		), 0)
+		FROM wallet_transactions
+		WHERE wallet_id = $1
+	`, walletID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+	if balance < 0 {
+		balance = 0
+	}
+
+	// 3. Fetch total pending/accounted commissions from settlements awaiting 14-day payout
+	var pendingAmount float64
+	err = r.db.GetContext(ctx, &pendingAmount, `
+		SELECT COALESCE(SUM(net_amount), 0)
+		FROM settlements
+		WHERE payee_user_id = $1 AND is_paid = false AND status IN ('accounted', 'pending')
+	`, userID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	// 4. Fetch payout tracker record
 	type trackerRecord struct {
 		DaysAccumulated     int        `db:"days_accumulated"`
 		PayoutFrequencyDays int        `db:"payout_frequency_days"`
@@ -58,10 +86,10 @@ func (r *SettlementRepository) GetWalletStatus(ctx context.Context, userID uuid.
 	trackerErr := r.db.GetContext(ctx, &rec, `
 		SELECT days_accumulated, payout_frequency_days, next_payout_date, has_special_request
 		FROM payout_tracker
-		WHERE payee_user_id = $1
+		WHERE payee_user_id = $1 AND (payee_type = $2 OR $2 = '')
 		ORDER BY created_at DESC
 		LIMIT 1
-	`, userID)
+	`, userID, payeeType)
 
 	if trackerErr == sql.ErrNoRows {
 		// Initialize default record for user if not exists
@@ -126,7 +154,7 @@ func (r *SettlementRepository) GetPendingSettlements(ctx context.Context, userID
 			net_amount,
 			status
 		FROM settlements
-		WHERE payee_user_id = $1 AND status = 'pending' AND is_paid = false
+		WHERE payee_user_id = $1 AND is_paid = false AND status IN ('accounted', 'pending')
 		ORDER BY earning_date DESC, created_at DESC
 	`, userID)
 
@@ -179,7 +207,7 @@ func (r *SettlementRepository) GetWalletTransactions(ctx context.Context, userID
 	}
 
 	var totalCount int
-	err = r.db.GetContext(ctx, &totalCount, "SELECT COUNT(*) FROM wallet_transactions WHERE wallet_id = $1", walletID)
+	err = r.db.GetContext(ctx, &totalCount, "SELECT COUNT(*) FROM wallet_transactions WHERE wallet_id = $1 AND reference_type IN ('settlement', 'bank_payout')", walletID)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +225,7 @@ func (r *SettlementRepository) GetWalletTransactions(ctx context.Context, userID
 	err = r.db.SelectContext(ctx, &rows, `
 		SELECT id, created_at, transaction_type, description, amount, balance_after
 		FROM wallet_transactions
-		WHERE wallet_id = $1
+		WHERE wallet_id = $1 AND reference_type IN ('settlement', 'bank_payout')
 		ORDER BY created_at DESC
 		LIMIT $2 OFFSET $3
 	`, walletID, limit, offset)
