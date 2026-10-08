@@ -232,8 +232,9 @@ func main() {
 
 	// Initialize staff wallet & payout handler (PayHere integration)
 	staffBankRepo := database.NewStaffBankRepository(sqlxDB.DB)
+	settlementRepo := database.NewSettlementRepository(sqlxDB.DB)
 	payhereService := services.NewPayHereService(cfg.PayHere, logger)
-	staffWalletHandler := handlers.NewStaffWalletHandler(staffBankRepo, staffRepository, payhereService, sqlxDB.DB, logger)
+	staffWalletHandler := handlers.NewStaffWalletHandler(staffBankRepo, staffRepository, payhereService, settlementRepo, sqlxDB.DB, logger)
 	logger.Info("💳 Staff Wallet & PayHere Payout system initialized")
 
 	// Initialize staff reporting handler (for issue reporting from driver/conductor app)
@@ -648,8 +649,24 @@ func main() {
 				staffProtected.GET("/bank-details", staffWalletHandler.GetBankDetails)
 				staffProtected.POST("/bank-details", staffWalletHandler.SaveBankDetails)
 				staffProtected.POST("/wallet/payout", staffWalletHandler.RequestPayout)
-				logger.Info("✓ Staff Wallet & Payout routes registered")
+
+				// Staff Settlements & 14-Day Cycle routes (Admin commissions integration)
+				staffProtected.GET("/wallet/status", staffWalletHandler.GetWalletStatus)
+				staffProtected.GET("/settlements/pending", staffWalletHandler.GetPendingSettlements)
+				staffProtected.GET("/wallet/transactions", staffWalletHandler.GetWalletTransactions)
+				staffProtected.POST("/settlements/special-request", staffWalletHandler.RequestSpecialPayout)
+				logger.Info("✓ Staff Wallet, Payout & Settlement routes registered")
 			}
+		}
+
+		// Mobile Wallet & Settlements routes (Admin Mobile App API Spec matching)
+		mobileAPI := router.Group("/api/mobile")
+		mobileAPI.Use(middleware.AuthMiddleware(jwtService))
+		{
+			mobileAPI.GET("/wallet/status", staffWalletHandler.GetWalletStatus)
+			mobileAPI.GET("/settlements/pending", staffWalletHandler.GetPendingSettlements)
+			mobileAPI.GET("/wallet/transactions", staffWalletHandler.GetWalletTransactions)
+			mobileAPI.POST("/settlements/special-request", staffWalletHandler.RequestSpecialPayout)
 		}
 
 		// Bus Owner routes (all protected)

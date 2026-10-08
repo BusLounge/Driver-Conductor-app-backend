@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ type StaffWalletHandler struct {
 	bankRepo       *database.StaffBankRepository
 	busStaffRepo   *database.BusStaffRepository
 	payhereService *services.PayHereService
+	settlementRepo *database.SettlementRepository
 	db             *sqlx.DB
 	logger         *logrus.Logger
 }
@@ -29,6 +31,7 @@ func NewStaffWalletHandler(
 	bankRepo *database.StaffBankRepository,
 	busStaffRepo *database.BusStaffRepository,
 	payhereService *services.PayHereService,
+	settlementRepo *database.SettlementRepository,
 	db *sqlx.DB,
 	logger *logrus.Logger,
 ) *StaffWalletHandler {
@@ -36,6 +39,7 @@ func NewStaffWalletHandler(
 		bankRepo:       bankRepo,
 		busStaffRepo:   busStaffRepo,
 		payhereService: payhereService,
+		settlementRepo: settlementRepo,
 		db:             db,
 		logger:         logger,
 	}
@@ -288,5 +292,94 @@ func maskAccountNumber(acc string) string {
 		return "****"
 	}
 	return fmt.Sprintf("****%s", acc[len(acc)-4:])
+}
+
+// resolvePayeeType determines if user is a driver or conductor
+func (h *StaffWalletHandler) resolvePayeeType(userID string) string {
+	staff, err := h.busStaffRepo.GetByUserID(userID)
+	if err == nil && staff != nil && staff.StaffType != "" {
+		return string(staff.StaffType)
+	}
+	return "driver"
+}
+
+// GetWalletStatus handles GET /wallet/status & GET /api/v1/staff/wallet/status
+func (h *StaffWalletHandler) GetWalletStatus(c *gin.Context) {
+	userCtx, ok := middleware.GetUserContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized", Message: "User context not found"})
+		return
+	}
+
+	payeeType := h.resolvePayeeType(userCtx.UserID.String())
+	status, err := h.settlementRepo.GetWalletStatus(c.Request.Context(), userCtx.UserID, payeeType)
+	if err != nil {
+		h.logger.WithError(err).Error("Failed to get wallet status")
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "database_error", Message: "Failed to retrieve wallet status"})
+		return
+	}
+
+	c.JSON(http.StatusOK, status)
+}
+
+// GetPendingSettlements handles GET /settlements/pending & GET /api/v1/staff/settlements/pending
+func (h *StaffWalletHandler) GetPendingSettlements(c *gin.Context) {
+	userCtx, ok := middleware.GetUserContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized", Message: "User context not found"})
+		return
+	}
+
+	resp, err := h.settlementRepo.GetPendingSettlements(c.Request.Context(), userCtx.UserID)
+	if err != nil {
+		h.logger.WithError(err).Error("Failed to get pending settlements")
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "database_error", Message: "Failed to retrieve pending settlements"})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+// GetWalletTransactions handles GET /wallet/transactions & GET /api/v1/staff/wallet/transactions
+func (h *StaffWalletHandler) GetWalletTransactions(c *gin.Context) {
+	userCtx, ok := middleware.GetUserContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized", Message: "User context not found"})
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+
+	resp, err := h.settlementRepo.GetWalletTransactions(c.Request.Context(), userCtx.UserID, page, limit)
+	if err != nil {
+		h.logger.WithError(err).Error("Failed to get wallet transactions")
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "database_error", Message: "Failed to retrieve wallet transactions"})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+// RequestSpecialPayout handles POST /settlements/special-request & POST /api/v1/staff/settlements/special-request
+func (h *StaffWalletHandler) RequestSpecialPayout(c *gin.Context) {
+	userCtx, ok := middleware.GetUserContext(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "unauthorized", Message: "User context not found"})
+		return
+	}
+
+	payeeType := h.resolvePayeeType(userCtx.UserID.String())
+	err := h.settlementRepo.RequestSpecialPayout(c.Request.Context(), userCtx.UserID, payeeType)
+	if err != nil {
+		h.logger.WithError(err).Error("Failed to request special payout")
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "database_error", Message: "Failed to submit special payout request"})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.SpecialPayoutResponse{
+		Message: "Special payout requested successfully. Funds will be deposited in the next 24 hours.",
+		Status:  "success",
+	})
 }
 
