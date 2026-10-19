@@ -624,6 +624,7 @@ func main() {
 				staffProtected.GET("/profile", staffHandler.GetProfile)
 				staffProtected.PUT("/profile", staffHandler.UpdateProfile)
 				staffProtected.GET("/my-trips", staffHandler.GetMyTrips)
+				staffProtected.GET("/trip-history", staffHandler.GetTripHistory)
 
 				// Active Trip routes (Start Trip / End Trip / Location tracking)
 				logger.Info("🚌 Registering Active Trip routes...")

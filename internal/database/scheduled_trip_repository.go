@@ -940,3 +940,162 @@ func (r *ScheduledTripRepository) GetAssignedTripsForStaff(staffID string, start
 	log.Printf("GetAssignedTripsForStaff: Found %d trips for staff %s", len(trips), staffID)
 	return trips, nil
 }
+
+// GetStaffTripHistory retrieves completed trips for a driver or conductor
+func (r *ScheduledTripRepository) GetStaffTripHistory(staffID string, limit, offset int) ([]models.CompletedTripRecord, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	query := `
+		SELECT 
+			st.id, st.trip_schedule_id, st.permit_id, st.departure_datetime,
+			st.estimated_duration_minutes, st.assigned_driver_id, st.assigned_conductor_id,
+			st.seat_layout_id, st.is_bookable, st.ever_published, st.base_fare, st.status, 
+			st.cancellation_reason, st.cancelled_at,
+			st.assignment_deadline, st.created_at, st.updated_at,
+			mr.route_number, mr.origin_city, mr.destination_city,
+			bor.direction,
+			at.actual_departure_time, at.actual_arrival_time,
+			COALESCE(at.current_passenger_count, 0) as passenger_count,
+			rp.bus_registration_number
+		FROM scheduled_trips st
+		LEFT JOIN trip_schedules ts ON st.trip_schedule_id = ts.id
+		LEFT JOIN bus_owner_routes bor ON COALESCE(st.bus_owner_route_id, ts.bus_owner_route_id) = bor.id
+		LEFT JOIN master_routes mr ON bor.master_route_id = mr.id
+		LEFT JOIN LATERAL (
+			SELECT actual_departure_time, actual_arrival_time, current_passenger_count, permit_id, driver_id, conductor_id, status
+			FROM active_trips
+			WHERE scheduled_trip_id = st.id
+			ORDER BY created_at DESC
+			LIMIT 1
+		) at ON true
+		LEFT JOIN route_permits rp ON COALESCE(st.permit_id, at.permit_id) = rp.id
+		WHERE (st.assigned_driver_id = $1 OR st.assigned_conductor_id = $1 OR at.driver_id = $1 OR at.conductor_id = $1)
+		  AND (st.status = 'completed' OR at.status = 'completed')
+		ORDER BY COALESCE(at.actual_arrival_time, at.actual_departure_time, st.departure_datetime) DESC
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := r.db.Query(query, staffID, limit, offset)
+	if err != nil {
+		log.Printf("GetStaffTripHistory: Query error: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	records := []models.CompletedTripRecord{}
+
+	for rows.Next() {
+		var rec models.CompletedTripRecord
+		var tripScheduleID sql.NullString
+		var permitID sql.NullString
+		var estimatedDurationMinutes sql.NullInt64
+		var assignedDriverID sql.NullString
+		var assignedConductorID sql.NullString
+		var seatLayoutID sql.NullString
+		var cancellationReason sql.NullString
+		var cancelledAt sql.NullTime
+		var assignmentDeadline sql.NullTime
+		var routeNumber sql.NullString
+		var originCity sql.NullString
+		var destinationCity sql.NullString
+		var direction sql.NullString
+		var actualDepartureTime sql.NullTime
+		var actualArrivalTime sql.NullTime
+		var passengerCount int
+		var busRegNum sql.NullString
+
+		err := rows.Scan(
+			&rec.ID,
+			&tripScheduleID,
+			&permitID,
+			&rec.DepartureDatetime,
+			&estimatedDurationMinutes,
+			&assignedDriverID,
+			&assignedConductorID,
+			&seatLayoutID,
+			&rec.IsBookable,
+			&rec.EverPublished,
+			&rec.BaseFare,
+			&rec.Status,
+			&cancellationReason,
+			&cancelledAt,
+			&assignmentDeadline,
+			&rec.CreatedAt,
+			&rec.UpdatedAt,
+			&routeNumber,
+			&originCity,
+			&destinationCity,
+			&direction,
+			&actualDepartureTime,
+			&actualArrivalTime,
+			&passengerCount,
+			&busRegNum,
+		)
+		if err != nil {
+			log.Printf("GetStaffTripHistory: Scan error: %v", err)
+			return nil, err
+		}
+
+		if tripScheduleID.Valid {
+			rec.TripScheduleID = &tripScheduleID.String
+		}
+		if permitID.Valid {
+			rec.PermitID = &permitID.String
+		}
+		if estimatedDurationMinutes.Valid {
+			dur := int(estimatedDurationMinutes.Int64)
+			rec.EstimatedDurationMinutes = &dur
+		}
+		if assignedDriverID.Valid {
+			rec.AssignedDriverID = &assignedDriverID.String
+		}
+		if assignedConductorID.Valid {
+			rec.AssignedConductorID = &assignedConductorID.String
+		}
+		if seatLayoutID.Valid {
+			rec.SeatLayoutID = &seatLayoutID.String
+		}
+		if cancellationReason.Valid {
+			rec.CancellationReason = &cancellationReason.String
+		}
+		if cancelledAt.Valid {
+			rec.CancelledAt = &cancelledAt.Time
+		}
+		if assignmentDeadline.Valid {
+			rec.AssignmentDeadline = &assignmentDeadline.Time
+		}
+		if routeNumber.Valid {
+			rec.RouteNumber = &routeNumber.String
+		}
+		if originCity.Valid {
+			rec.OriginCity = &originCity.String
+		}
+		if destinationCity.Valid {
+			rec.DestinationCity = &destinationCity.String
+		}
+		if direction.Valid {
+			isUp := direction.String == "UP"
+			rec.IsUpDirection = &isUp
+		}
+		if actualDepartureTime.Valid {
+			rec.ActualDepartureTime = &actualDepartureTime.Time
+		}
+		if actualArrivalTime.Valid {
+			rec.ActualArrivalTime = &actualArrivalTime.Time
+		}
+		rec.PassengerCount = passengerCount
+		if busRegNum.Valid {
+			rec.BusRegistrationNumber = &busRegNum.String
+		}
+
+		records = append(records, rec)
+	}
+
+	return records, nil
+}
+

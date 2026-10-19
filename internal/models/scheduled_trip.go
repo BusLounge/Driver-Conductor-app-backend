@@ -216,6 +216,18 @@ type ScheduledTripWithRouteInfo struct {
 	IsUpDirection   *bool   `json:"is_up_direction,omitempty"`
 }
 
+// CompletedTripRecord represents a completed trip with active trip metrics and route information
+type CompletedTripRecord struct {
+	ScheduledTripWithRouteInfo
+	ActualDepartureTime   *time.Time `json:"actual_departure_time,omitempty"`
+	ActualArrivalTime     *time.Time `json:"actual_arrival_time,omitempty"`
+	PassengerCount        int        `json:"passenger_count"`
+	BusRegistrationNumber *string    `json:"bus_registration_number,omitempty"`
+	IsDriver              bool       `json:"is_driver"`
+	IsConductor           bool       `json:"is_conductor"`
+}
+
+
 // StaffDetails contains basic staff information for trip display
 type StaffDetails struct {
 	ID            string  `json:"id"`

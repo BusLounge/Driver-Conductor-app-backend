@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -305,3 +306,69 @@ func (h *StaffHandler) GetMyTrips(c *gin.Context) {
 		"end_date":   endDate.Format("2006-01-02"),
 	})
 }
+
+// GetTripHistory retrieves completed trips for the authenticated driver or conductor
+// GET /api/v1/staff/trip-history
+func (h *StaffHandler) GetTripHistory(c *gin.Context) {
+	userCtx, exists := middleware.GetUserContext(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "unauthorized",
+			"message": "User not authenticated",
+		})
+		return
+	}
+
+	userIDStr := userCtx.UserID.String()
+
+	staff, err := h.staffRepo.GetByUserID(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   "not_staff",
+			"message": "User is not registered as staff",
+		})
+		return
+	}
+
+	limit := 50
+	offset := 0
+	if l := c.Query("limit"); l != "" {
+		if parsedL, err := strconv.Atoi(l); err == nil && parsedL > 0 && parsedL <= 100 {
+			limit = parsedL
+		}
+	}
+	if o := c.Query("offset"); o != "" {
+		if parsedO, err := strconv.Atoi(o); err == nil && parsedO >= 0 {
+			offset = parsedO
+		}
+	}
+
+	trips, err := h.scheduledTripRepo.GetStaffTripHistory(staff.ID, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "fetch_failed",
+			"message": "Failed to fetch trip history",
+		})
+		return
+	}
+
+	for i := range trips {
+		trips[i].IsDriver = (trips[i].AssignedDriverID != nil && *trips[i].AssignedDriverID == staff.ID)
+		trips[i].IsConductor = (trips[i].AssignedConductorID != nil && *trips[i].AssignedConductorID == staff.ID)
+		if !trips[i].IsDriver && !trips[i].IsConductor {
+			if staff.StaffType == "driver" {
+				trips[i].IsDriver = true
+			} else {
+				trips[i].IsConductor = true
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"trips":      trips,
+		"count":      len(trips),
+		"staff_id":   staff.ID,
+		"staff_type": staff.StaffType,
+	})
+}
+
