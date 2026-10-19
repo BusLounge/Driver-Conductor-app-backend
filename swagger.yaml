@@ -2961,6 +2961,69 @@ paths:
                     example: Staff profile not found
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/staff/trip-history:
+    get:
+      summary: Get completed trip history for staff member
+      description: 'Retrieves all completed/ended trips assigned to the authenticated staff member (driver or conductor).'
+      operationId: getStaffTripHistory
+      tags:
+      - Staff
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        description: Maximum number of trips to return
+        schema:
+          type: integer
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        description: Offset for pagination
+        schema:
+          type: integer
+          default: 0
+      responses:
+        '200':
+          description: Completed trip history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trips:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StaffAssignedTrip'
+                  count:
+                    type: integer
+                    description: Total number of trips returned
+                  staff_id:
+                    type: string
+                    format: uuid
+                    description: Staff member's ID
+                  staff_type:
+                    type: string
+                    enum:
+                    - driver
+                    - conductor
+                    description: Staff member's type
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Staff profile not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Staff profile not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/staff/trips/my-active:
     get:
       summary: Get staff's current active trip
