@@ -2855,6 +2855,324 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/staff/fuel-logs:
+    post:
+      summary: Create fuel refill log
+      description: Log a new fuel refill for an assigned bus in bus_fuel_logs
+      operationId: createStaffFuelLog
+      tags:
+      - Staff Fuel & Maintenance
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - bus_id
+              - date
+              - fuel_type
+              - liters
+              - total_cost
+              properties:
+                bus_id:
+                  type: string
+                  format: uuid
+                  example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                date:
+                  type: string
+                  format: date
+                  example: '2026-11-02'
+                fuel_type:
+                  type: string
+                  enum: [diesel, petrol, cng, electric]
+                  example: diesel
+                liters:
+                  type: number
+                  example: 45.5
+                cost_per_liter:
+                  type: number
+                  example: 400.0
+                total_cost:
+                  type: number
+                  example: 18200.0
+                odometer_reading:
+                  type: integer
+                  example: 125430
+                station_name:
+                  type: string
+                  example: Ceylon Petroleum - Colombo 03
+                notes:
+                  type: string
+                  example: Full tank refill
+      responses:
+        '201':
+          description: Fuel log created successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      summary: List fuel refill logs
+      description: Get fuel refill logs logged by the current staff member
+      operationId: getStaffFuelLogs
+      tags:
+      - Staff Fuel & Maintenance
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: bus_id
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: List of fuel refill logs
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/staff/fuel-logs/{id}:
+    get:
+      summary: Get fuel refill log detail
+      description: Retrieve a specific fuel log by ID
+      operationId: getStaffFuelLogByID
+      tags:
+      - Staff Fuel & Maintenance
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Fuel log details
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete fuel refill log
+      description: Delete a fuel refill log previously submitted by current staff
+      operationId: deleteStaffFuelLog
+      tags:
+      - Staff Fuel & Maintenance
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Fuel log deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/staff/maintenance-logs:
+    post:
+      summary: Create maintenance log
+      description: Log a maintenance or repair event for an assigned bus in bus_maintenance_logs
+      operationId: createStaffMaintenanceLog
+      tags:
+      - Staff Fuel & Maintenance
+      security:
+      - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - bus_id
+              - date
+              - maintenance_type
+              - description
+              - total_cost
+              properties:
+                bus_id:
+                  type: string
+                  format: uuid
+                  example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                date:
+                  type: string
+                  format: date
+                  example: '2026-11-02'
+                maintenance_type:
+                  type: string
+                  enum: [oil_change, tire_replacement, brake_service, engine_service, battery, body_repair, general, other]
+                  example: oil_change
+                description:
+                  type: string
+                  example: Engine oil and filter replaced
+                total_cost:
+                  type: number
+                  example: 12500.0
+                vendor_name:
+                  type: string
+                  example: Kandy Central Auto Services
+                odometer_reading:
+                  type: integer
+                  example: 125600
+                next_service_due_km:
+                  type: integer
+                  example: 130600
+                next_service_due_date:
+                  type: string
+                  format: date
+                  example: '2027-02-02'
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Maintenance log created successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      summary: List maintenance logs
+      description: Get maintenance logs recorded by the current staff member
+      operationId: getStaffMaintenanceLogs
+      tags:
+      - Staff Fuel & Maintenance
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: bus_id
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: List of maintenance logs
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/staff/maintenance-logs/{id}:
+    get:
+      summary: Get maintenance log detail
+      description: Retrieve a specific maintenance log by ID
+      operationId: getStaffMaintenanceLogByID
+      tags:
+      - Staff Fuel & Maintenance
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Maintenance log details
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete maintenance log
+      description: Delete a maintenance log previously submitted by current staff
+      operationId: deleteStaffMaintenanceLog
+      tags:
+      - Staff Fuel & Maintenance
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Maintenance log deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/staff/vehicle-summary:
+    get:
+      summary: Get vehicle summary statistics
+      description: Aggregated stats for fuel and maintenance expenses for the current staff or specified bus
+      operationId: getStaffVehicleSummary
+      tags:
+      - Staff Fuel & Maintenance
+      security:
+      - BearerAuth: []
+      parameters:
+      - name: bus_id
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Vehicle summary statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_fuel_liters:
+                    type: number
+                  total_fuel_cost:
+                    type: number
+                  total_maintenance_cost:
+                    type: number
+                  fuel_entries_count:
+                    type: integer
+                  maintenance_entries_count:
+                    type: integer
+                  avg_cost_per_liter:
+                    type: number
+                  last_odometer:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/staff/my-trips:
     get:
       summary: Get assigned trips for staff member

@@ -102,6 +102,10 @@ func main() {
 	// Initialize report issues repository (for staff issue reporting)
 	reportIssuesRepo := database.NewReportIssuesRepository(db)
 
+	// Initialize bus fuel and maintenance repositories
+	busFuelLogRepo := database.NewBusFuelLogRepository(db)
+	busMaintenanceLogRepo := database.NewBusMaintenanceLogRepository(db)
+
 	// Initialize booking repository
 	bookingRepository := database.NewBookingRepository(db)
 
@@ -239,6 +243,10 @@ func main() {
 
 	// Initialize staff reporting handler (for issue reporting from driver/conductor app)
 	staffReportingHandler := handlers.NewStaffReportingHandler(reportIssuesRepo)
+
+	// Initialize bus fuel and maintenance handlers
+	busFuelLogHandler := handlers.NewBusFuelLogHandler(busFuelLogRepo, busMaintenanceLogRepo, staffRepository, busRepository)
+	busMaintenanceLogHandler := handlers.NewBusMaintenanceLogHandler(busMaintenanceLogRepo, staffRepository, busRepository)
 
 	// Initialize active trip service and handler (for Start Trip / End Trip / Location tracking)
 	logger.Info("🚌 Initializing Active Trip tracking system...")
@@ -657,6 +665,20 @@ func main() {
 				staffProtected.GET("/wallet/transactions", staffWalletHandler.GetWalletTransactions)
 				staffProtected.POST("/settlements/special-request", staffWalletHandler.RequestSpecialPayout)
 				logger.Info("✓ Staff Wallet, Payout & Settlement routes registered")
+
+				// Staff Bus Fuel & Maintenance routes
+				logger.Info("⛽ Registering Staff Bus Fuel & Maintenance routes...")
+				staffProtected.GET("/buses", busFuelLogHandler.GetMyBuses)
+				staffProtected.POST("/fuel-logs", busFuelLogHandler.CreateFuelLog)
+				staffProtected.GET("/fuel-logs", busFuelLogHandler.GetMyFuelLogs)
+				staffProtected.GET("/fuel-logs/:id", busFuelLogHandler.GetFuelLogByID)
+				staffProtected.DELETE("/fuel-logs/:id", busFuelLogHandler.DeleteFuelLog)
+				staffProtected.POST("/maintenance-logs", busMaintenanceLogHandler.CreateMaintenanceLog)
+				staffProtected.GET("/maintenance-logs", busMaintenanceLogHandler.GetMyMaintenanceLogs)
+				staffProtected.GET("/maintenance-logs/:id", busMaintenanceLogHandler.GetMaintenanceLogByID)
+				staffProtected.DELETE("/maintenance-logs/:id", busMaintenanceLogHandler.DeleteMaintenanceLog)
+				staffProtected.GET("/vehicle-summary", busFuelLogHandler.GetVehicleSummary)
+				logger.Info("✓ Staff Bus Fuel & Maintenance routes registered")
 			}
 		}
 
