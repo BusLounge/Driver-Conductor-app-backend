@@ -432,3 +432,61 @@ func (r *BusRepository) GetByStatus(busOwnerID string, status string) ([]models.
 
 	return buses, nil
 }
+
+
+// GetAllActive retrieves all active buses in the system
+func (r *BusRepository) GetAllActive() ([]models.Bus, error) {
+	query := `
+		SELECT
+			id, bus_owner_id, permit_id, bus_number, license_plate,
+			bus_type, manufacturing_year, last_maintenance_date,
+			insurance_expiry, status, seat_layout_id, has_wifi, has_ac, has_charging_ports,
+			has_entertainment, has_refreshments, created_at, updated_at
+		FROM buses
+		WHERE status = 'active'
+		ORDER BY bus_number ASC
+	`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	buses := []models.Bus{}
+	for rows.Next() {
+		var bus models.Bus
+		var manufacturingYear sql.NullInt64
+		var lastMaintenanceDate sql.NullTime
+		var insuranceExpiry sql.NullTime
+		var seatLayoutID sql.NullString
+
+		err := rows.Scan(
+			&bus.ID, &bus.BusOwnerID, &bus.PermitID, &bus.BusNumber, &bus.LicensePlate,
+			&bus.BusType, &manufacturingYear, &lastMaintenanceDate,
+			&insuranceExpiry, &bus.Status, &seatLayoutID, &bus.HasWifi, &bus.HasAC, &bus.HasChargingPorts,
+			&bus.HasEntertainment, &bus.HasRefreshments, &bus.CreatedAt, &bus.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if manufacturingYear.Valid {
+			year := int(manufacturingYear.Int64)
+			bus.ManufacturingYear = &year
+		}
+		if lastMaintenanceDate.Valid {
+			bus.LastMaintenanceDate = &lastMaintenanceDate.Time
+		}
+		if insuranceExpiry.Valid {
+			bus.InsuranceExpiry = &insuranceExpiry.Time
+		}
+		if seatLayoutID.Valid {
+			bus.SeatLayoutID = &seatLayoutID.String
+		}
+
+		buses = append(buses, bus)
+	}
+
+	return buses, nil
+}

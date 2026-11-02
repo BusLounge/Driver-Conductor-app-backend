@@ -210,7 +210,7 @@ func (h *BusFuelLogHandler) DeleteFuelLog(c *gin.Context) {
 
 // GetMyBuses returns buses available to the staff member
 // @Summary List assigned buses
-// @Description Get buses belonging to staff member's employer
+// @Description Get buses belonging to staff member's employer or active buses
 // @Tags Staff Fuel & Maintenance
 // @Produce json
 // @Security BearerAuth
@@ -224,18 +224,34 @@ func (h *BusFuelLogHandler) GetMyBuses(c *gin.Context) {
 	}
 
 	staff, err := h.staffRepo.GetByUserID(userCtx.UserID.String())
-	if err != nil {
-		c.JSON(http.StatusOK, []models.Bus{})
-		return
+	if err == nil && staff != nil {
+		// 1. Try current employment
+		employment, err := h.staffRepo.GetCurrentEmployment(staff.ID)
+		if err == nil && employment != nil && employment.BusOwnerID != "" {
+			buses, err := h.busRepo.GetByOwnerID(employment.BusOwnerID)
+			if err == nil && len(buses) > 0 {
+				c.JSON(http.StatusOK, buses)
+				return
+			}
+		}
+
+		// 2. Try any employment history
+		employments, err := h.staffRepo.GetEmploymentHistory(staff.ID)
+		if err == nil && len(employments) > 0 {
+			for _, emp := range employments {
+				if emp.BusOwnerID != "" {
+					buses, err := h.busRepo.GetByOwnerID(emp.BusOwnerID)
+					if err == nil && len(buses) > 0 {
+						c.JSON(http.StatusOK, buses)
+						return
+					}
+				}
+			}
+		}
 	}
 
-	employment, err := h.staffRepo.GetCurrentEmployment(staff.ID)
-	if err != nil || employment == nil {
-		c.JSON(http.StatusOK, []models.Bus{})
-		return
-	}
-
-	buses, err := h.busRepo.GetByOwnerID(employment.BusOwnerID)
+	// 3. Fallback: all active buses so staff is never left with an empty bus list
+	buses, err := h.busRepo.GetAllActive()
 	if err != nil {
 		c.JSON(http.StatusOK, []models.Bus{})
 		return

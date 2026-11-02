@@ -234,17 +234,34 @@ func (r *BusMaintenanceLogRepository) GetVehicleSummary(staffID string, busID st
 	summary := &models.VehicleSummaryResponse{}
 
 	// 1. Fuel stats
-	fuelQuery := `
-		SELECT
-			COALESCE(SUM(liters), 0),
-			COALESCE(SUM(total_cost), 0),
-			COUNT(*),
-			MAX(odometer_reading)
-		FROM bus_fuel_logs
-		WHERE staff_id = $1 AND ($2 = '' OR bus_id = $2::uuid)
-	`
+	var fuelQuery string
+	var fuelArgs []interface{}
+	if strings.TrimSpace(busID) != "" {
+		fuelQuery = `
+			SELECT
+				COALESCE(SUM(liters), 0),
+				COALESCE(SUM(total_cost), 0),
+				COUNT(*),
+				MAX(odometer_reading)
+			FROM bus_fuel_logs
+			WHERE staff_id = $1 AND bus_id = $2
+		`
+		fuelArgs = []interface{}{staffID, busID}
+	} else {
+		fuelQuery = `
+			SELECT
+				COALESCE(SUM(liters), 0),
+				COALESCE(SUM(total_cost), 0),
+				COUNT(*),
+				MAX(odometer_reading)
+			FROM bus_fuel_logs
+			WHERE staff_id = $1
+		`
+		fuelArgs = []interface{}{staffID}
+	}
+
 	var fuelOdom sql.NullInt64
-	err := r.db.QueryRow(fuelQuery, staffID, busID).Scan(
+	err := r.db.QueryRow(fuelQuery, fuelArgs...).Scan(
 		&summary.TotalFuelLiters,
 		&summary.TotalFuelCost,
 		&summary.FuelEntriesCount,
@@ -259,16 +276,32 @@ func (r *BusMaintenanceLogRepository) GetVehicleSummary(staffID string, busID st
 	}
 
 	// 2. Maintenance stats
-	maintQuery := `
-		SELECT
-			COALESCE(SUM(total_cost), 0),
-			COUNT(*),
-			MAX(odometer_reading)
-		FROM bus_maintenance_logs
-		WHERE staff_id = $1 AND ($2 = '' OR bus_id = $2::uuid)
-	`
+	var maintQuery string
+	var maintArgs []interface{}
+	if strings.TrimSpace(busID) != "" {
+		maintQuery = `
+			SELECT
+				COALESCE(SUM(total_cost), 0),
+				COUNT(*),
+				MAX(odometer_reading)
+			FROM bus_maintenance_logs
+			WHERE staff_id = $1 AND bus_id = $2
+		`
+		maintArgs = []interface{}{staffID, busID}
+	} else {
+		maintQuery = `
+			SELECT
+				COALESCE(SUM(total_cost), 0),
+				COUNT(*),
+				MAX(odometer_reading)
+			FROM bus_maintenance_logs
+			WHERE staff_id = $1
+		`
+		maintArgs = []interface{}{staffID}
+	}
+
 	var maintOdom sql.NullInt64
-	err = r.db.QueryRow(maintQuery, staffID, busID).Scan(
+	err = r.db.QueryRow(maintQuery, maintArgs...).Scan(
 		&summary.TotalMaintenanceCost,
 		&summary.MaintenanceEntriesCount,
 		&maintOdom,
