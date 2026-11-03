@@ -225,7 +225,14 @@ func (h *BusFuelLogHandler) GetMyBuses(c *gin.Context) {
 
 	staff, err := h.staffRepo.GetByUserID(userCtx.UserID.String())
 	if err == nil && staff != nil {
-		// 1. Try current employment
+		// 1. Try directly retrieving assigned buses (active trips, assigned trips, or bus owner)
+		buses, err := h.busRepo.GetBusesForStaff(staff.ID)
+		if err == nil && len(buses) > 0 {
+			c.JSON(http.StatusOK, buses)
+			return
+		}
+
+		// 2. Try current employment
 		employment, err := h.staffRepo.GetCurrentEmployment(staff.ID)
 		if err == nil && employment != nil && employment.BusOwnerID != "" {
 			buses, err := h.busRepo.GetByOwnerID(employment.BusOwnerID)
@@ -235,7 +242,7 @@ func (h *BusFuelLogHandler) GetMyBuses(c *gin.Context) {
 			}
 		}
 
-		// 2. Try any employment history
+		// 3. Try any employment history
 		employments, err := h.staffRepo.GetEmploymentHistory(staff.ID)
 		if err == nil && len(employments) > 0 {
 			for _, emp := range employments {
@@ -250,7 +257,7 @@ func (h *BusFuelLogHandler) GetMyBuses(c *gin.Context) {
 		}
 	}
 
-	// 3. Fallback: all active buses so staff is never left with an empty bus list
+	// 4. Fallback: all active buses so staff is never left with an empty bus list
 	buses, err := h.busRepo.GetAllActive()
 	if err != nil {
 		c.JSON(http.StatusOK, []models.Bus{})

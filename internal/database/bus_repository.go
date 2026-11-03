@@ -490,3 +490,80 @@ func (r *BusRepository) GetAllActive() ([]models.Bus, error) {
 
 	return buses, nil
 }
+
+// GetBusesForStaff retrieves buses linked to the staff member via active trips, assigned trips, or employment
+func (r *BusRepository) GetBusesForStaff(staffID string) ([]models.Bus, error) {
+	query := `
+		SELECT DISTINCT
+			b.id, b.bus_owner_id, b.permit_id, b.bus_number, b.license_plate,
+			b.bus_type, b.manufacturing_year, b.last_maintenance_date,
+			b.insurance_expiry, b.status, b.seat_layout_id, b.has_wifi, b.has_ac, b.has_charging_ports,
+			b.has_entertainment, b.has_refreshments, b.created_at, b.updated_at
+		FROM buses b
+		WHERE b.id IN (
+			-- 1. Current active trip for this staff
+			SELECT at.bus_id FROM active_trips at
+			WHERE (at.driver_id = $1 OR at.conductor_id = $1)
+			  AND at.status = 'in_progress'
+
+			UNION
+
+			-- 2. Assigned scheduled trips (driver or conductor)
+			SELECT b2.id FROM buses b2
+			JOIN scheduled_trips st ON st.permit_id = b2.permit_id
+			WHERE (st.assigned_driver_id = $1 OR st.assigned_conductor_id = $1)
+			  AND st.status NOT IN ('cancelled', 'completed')
+
+			UNION
+
+			-- 3. Buses belonging to staff member's employer
+			SELECT b3.id FROM buses b3
+			JOIN bus_staff_employment bse ON bse.bus_owner_id = b3.bus_owner_id
+			WHERE bse.staff_id = $1 AND bse.status = 'active'
+		)
+		ORDER BY b.bus_number ASC
+	`
+
+	rows, err := r.db.Query(query, staffID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	buses := []models.Bus{}
+	for rows.Next() {
+		var bus models.Bus
+		var manufacturingYear sql.NullInt64
+		var lastMaintenanceDate sql.NullTime
+		var insuranceExpiry sql.NullTime
+		var seatLayoutID sql.NullString
+
+		err := rows.Scan(
+			&bus.ID, &bus.BusOwnerID, &bus.PermitID, &bus.BusNumber, &bus.LicensePlate,
+			&bus.BusType, &manufacturingYear, &lastMaintenanceDate,
+			&insuranceExpiry, &bus.Status, &seatLayoutID, &bus.HasWifi, &bus.HasAC, &bus.HasChargingPorts,
+			&bus.HasEntertainment, &bus.HasRefreshments, &bus.CreatedAt, &bus.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if manufacturingYear.Valid {
+			year := int(manufacturingYear.Int64)
+			bus.ManufacturingYear = &year
+		}
+		if lastMaintenanceDate.Valid {
+			bus.LastMaintenanceDate = &lastMaintenanceDate.Time
+		}
+		if insuranceExpiry.Valid {
+			bus.InsuranceExpiry = &insuranceExpiry.Time
+		}
+		if seatLayoutID.Valid {
+			bus.SeatLayoutID = &seatLayoutID.String
+		}
+
+		buses = append(buses, bus)
+	}
+
+	return buses, nil
+}
