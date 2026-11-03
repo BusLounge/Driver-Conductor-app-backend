@@ -154,7 +154,7 @@ func (r *ScheduledTripRepository) GetByScheduleIDsAndDateRangeWithRouteInfo(sche
 
 	query := fmt.Sprintf(`
 		SELECT 
-			st.id, st.trip_schedule_id, st.permit_id, st.departure_datetime,
+			st.id, st.trip_schedule_id, COALESCE(st.permit_id, ts.permit_id) AS permit_id, st.departure_datetime,
 			st.estimated_duration_minutes, st.assigned_driver_id, st.assigned_conductor_id,
 			st.seat_layout_id, st.is_bookable, st.ever_published, st.base_fare, st.status, st.cancellation_reason, st.cancelled_at,
 			st.assignment_deadline, st.created_at, st.updated_at,
@@ -198,7 +198,7 @@ func (r *ScheduledTripRepository) GetSpecialTripsByBusOwnerAndDateRange(busOwner
 
 	query := `
 		SELECT 
-			st.id, st.trip_schedule_id, st.permit_id, st.departure_datetime,
+			st.id, st.trip_schedule_id, COALESCE(st.permit_id, ts.permit_id) AS permit_id, st.departure_datetime,
 			st.estimated_duration_minutes, st.assigned_driver_id, st.assigned_conductor_id,
 			st.seat_layout_id, st.is_bookable, st.ever_published, st.base_fare, st.status, st.cancellation_reason, st.cancelled_at,
 			st.assignment_deadline, st.created_at, st.updated_at,
@@ -906,7 +906,7 @@ func (r *ScheduledTripRepository) GetAssignedTripsForStaff(staffID string, start
 
 	query := `
 		SELECT 
-			st.id, st.trip_schedule_id, st.permit_id, st.departure_datetime,
+			st.id, st.trip_schedule_id, COALESCE(st.permit_id, ts.permit_id) AS permit_id, st.departure_datetime,
 			st.estimated_duration_minutes, st.assigned_driver_id, st.assigned_conductor_id,
 			st.seat_layout_id, st.is_bookable, st.ever_published, st.base_fare, st.status, 
 			st.cancellation_reason, st.cancelled_at,
@@ -952,7 +952,7 @@ func (r *ScheduledTripRepository) GetStaffTripHistory(staffID string, limit, off
 
 	query := `
 		SELECT 
-			st.id, st.trip_schedule_id, st.permit_id, st.departure_datetime,
+			st.id, st.trip_schedule_id, COALESCE(st.permit_id, ts.permit_id) AS permit_id, st.departure_datetime,
 			st.estimated_duration_minutes, st.assigned_driver_id, st.assigned_conductor_id,
 			st.seat_layout_id, st.is_bookable, st.ever_published, st.base_fare, st.status, 
 			st.cancellation_reason, st.cancelled_at,

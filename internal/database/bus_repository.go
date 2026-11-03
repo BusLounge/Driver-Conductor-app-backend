@@ -513,10 +513,21 @@ func (r *BusRepository) GetBusesForStaff(staffID string, optionalUserID ...strin
 
 			UNION
 
-			-- 2. Assigned scheduled trips (driver or conductor, matched via permit_id or route_permits or trip_schedules)
+			-- 2. Direct bus match via route_permits from scheduled trips
+			SELECT rp.bus_id FROM scheduled_trips st
+			LEFT JOIN trip_schedules ts ON st.trip_schedule_id = ts.id
+			JOIN route_permits rp ON (rp.id = COALESCE(st.permit_id, ts.permit_id))
+			WHERE (st.assigned_driver_id = $1 OR st.assigned_conductor_id = $1 OR st.assigned_driver_id = $2 OR st.assigned_conductor_id = $2)
+			  AND st.status NOT IN ('cancelled', 'completed')
+			  AND rp.bus_id IS NOT NULL
+
+			UNION
+
+			-- 3. Any scheduled trip joined with buses via permit, bus_number, license_plate
 			SELECT b2.id FROM buses b2
 			LEFT JOIN route_permits rp ON (
-				b2.permit_id = rp.id 
+				b2.id = rp.bus_id
+				OR b2.permit_id = rp.id 
 				OR b2.license_plate = rp.bus_registration_number 
 				OR b2.bus_number = rp.bus_registration_number
 			)
@@ -533,10 +544,10 @@ func (r *BusRepository) GetBusesForStaff(staffID string, optionalUserID ...strin
 
 			UNION
 
-			-- 3. Buses belonging to staff member's employer
+			-- 4. Buses belonging to staff member's employer
 			SELECT b3.id FROM buses b3
 			JOIN bus_staff_employment bse ON bse.bus_owner_id = b3.bus_owner_id
-			WHERE (bse.staff_id = $1 OR bse.staff_id = $2) AND bse.status = 'active'
+			WHERE (bse.staff_id = $1 OR bse.staff_id = $2) AND bse.is_current = true
 		)
 		ORDER BY b.bus_number ASC
 	`
