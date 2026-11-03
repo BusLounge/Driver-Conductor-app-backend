@@ -226,7 +226,7 @@ func (h *BusFuelLogHandler) GetMyBuses(c *gin.Context) {
 	staff, err := h.staffRepo.GetByUserID(userCtx.UserID.String())
 	if err == nil && staff != nil {
 		// 1. Try directly retrieving assigned buses (active trips, assigned trips, or bus owner)
-		buses, err := h.busRepo.GetBusesForStaff(staff.ID)
+		buses, err := h.busRepo.GetBusesForStaff(staff.ID, staff.UserID)
 		if err == nil && len(buses) > 0 {
 			c.JSON(http.StatusOK, buses)
 			return

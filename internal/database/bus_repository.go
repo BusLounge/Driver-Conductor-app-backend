@@ -492,7 +492,12 @@ func (r *BusRepository) GetAllActive() ([]models.Bus, error) {
 }
 
 // GetBusesForStaff retrieves buses linked to the staff member via active trips, assigned trips, or employment
-func (r *BusRepository) GetBusesForStaff(staffID string) ([]models.Bus, error) {
+func (r *BusRepository) GetBusesForStaff(staffID string, optionalUserID ...string) ([]models.Bus, error) {
+	effectiveUserID := staffID
+	if len(optionalUserID) > 0 && optionalUserID[0] != "" {
+		effectiveUserID = optionalUserID[0]
+	}
+
 	query := `
 		SELECT DISTINCT
 			b.id, b.bus_owner_id, b.permit_id, b.bus_number, b.license_plate,
@@ -503,15 +508,27 @@ func (r *BusRepository) GetBusesForStaff(staffID string) ([]models.Bus, error) {
 		WHERE b.id IN (
 			-- 1. Current active trip for this staff
 			SELECT at.bus_id FROM active_trips at
-			WHERE (at.driver_id = $1 OR at.conductor_id = $1)
+			WHERE (at.driver_id = $1 OR at.conductor_id = $1 OR at.driver_id = $2 OR at.conductor_id = $2)
 			  AND at.status = 'in_progress'
 
 			UNION
 
-			-- 2. Assigned scheduled trips (driver or conductor)
+			-- 2. Assigned scheduled trips (driver or conductor, matched via permit_id or route_permits or trip_schedules)
 			SELECT b2.id FROM buses b2
-			JOIN scheduled_trips st ON st.permit_id = b2.permit_id
-			WHERE (st.assigned_driver_id = $1 OR st.assigned_conductor_id = $1)
+			LEFT JOIN route_permits rp ON (
+				b2.permit_id = rp.id 
+				OR b2.license_plate = rp.bus_registration_number 
+				OR b2.bus_number = rp.bus_registration_number
+			)
+			JOIN scheduled_trips st ON (
+				st.permit_id = b2.permit_id 
+				OR st.permit_id = rp.id
+				OR st.trip_schedule_id IN (
+					SELECT ts.id FROM trip_schedules ts 
+					WHERE ts.permit_id = b2.permit_id OR ts.permit_id = rp.id
+				)
+			)
+			WHERE (st.assigned_driver_id = $1 OR st.assigned_conductor_id = $1 OR st.assigned_driver_id = $2 OR st.assigned_conductor_id = $2)
 			  AND st.status NOT IN ('cancelled', 'completed')
 
 			UNION
@@ -519,12 +536,12 @@ func (r *BusRepository) GetBusesForStaff(staffID string) ([]models.Bus, error) {
 			-- 3. Buses belonging to staff member's employer
 			SELECT b3.id FROM buses b3
 			JOIN bus_staff_employment bse ON bse.bus_owner_id = b3.bus_owner_id
-			WHERE bse.staff_id = $1 AND bse.status = 'active'
+			WHERE (bse.staff_id = $1 OR bse.staff_id = $2) AND bse.status = 'active'
 		)
 		ORDER BY b.bus_number ASC
 	`
 
-	rows, err := r.db.Query(query, staffID)
+	rows, err := r.db.Query(query, staffID, effectiveUserID)
 	if err != nil {
 		return nil, err
 	}
