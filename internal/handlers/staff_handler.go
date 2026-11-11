@@ -133,20 +133,21 @@ func (h *StaffHandler) GetProfile(c *gin.Context) {
 // UpdateProfile updates staff profile
 // PUT /api/v1/staff/profile
 func (h *StaffHandler) UpdateProfile(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	// Get user context from Gin (set by auth middleware)
+	userCtx, exists := middleware.GetUserContext(c)
+	var userIDStr string
+	if exists {
+		userIDStr = userCtx.UserID.String()
+	} else if userID, idExists := c.Get("user_id"); idExists {
+		if str, ok := userID.(string); ok {
+			userIDStr = str
+		}
+	}
+
+	if userIDStr == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":   "unauthorized",
 			"message": "User not authenticated",
-		})
-		return
-	}
-
-	userIDStr, ok := userID.(string)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "invalid_user_id",
-			"message": "Invalid user ID format",
 		})
 		return
 	}

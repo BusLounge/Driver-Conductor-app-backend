@@ -202,7 +202,9 @@ func (s *StaffService) UpdateStaffProfile(userID string, updates map[string]inte
 		fields["license_number"] = licenseNum
 	}
 
-	if expYears, ok := updates["experience_years"].(int); ok {
+	if expYears, ok := updates["experience_years"].(float64); ok {
+		fields["experience_years"] = int(expYears)
+	} else if expYears, ok := updates["experience_years"].(int); ok {
 		fields["experience_years"] = expYears
 	}
 
@@ -230,6 +232,21 @@ func (s *StaffService) UpdateStaffProfile(userID string, updates map[string]inte
 	err = s.staffRepo.UpdateFields(userID, fields)
 	if err != nil {
 		return fmt.Errorf("failed to update staff profile: %v", err)
+	}
+
+	// Also sync first_name and last_name to users table so all profiles stay in sync
+	var firstNameStr, lastNameStr string
+	if fn, ok := fields["first_name"].(string); ok {
+		firstNameStr = fn
+	}
+	if ln, ok := fields["last_name"].(string); ok {
+		lastNameStr = ln
+	}
+	if firstNameStr != "" || lastNameStr != "" {
+		userUUID, err := uuid.Parse(userID)
+		if err == nil {
+			_ = s.userRepo.UpdateProfile(userUUID, firstNameStr, lastNameStr, "", "", "", "")
+		}
 	}
 
 	return nil
